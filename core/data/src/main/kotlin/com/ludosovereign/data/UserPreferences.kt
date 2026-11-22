@@ -103,7 +103,7 @@ object LanguageStore {
     private const val KEY = "tag"
 
     /** BCP-47 tags of the bundled translations ("" = follow the system). */
-    val SUPPORTED = listOf("", "en", "hi", "ta", "te", "kn", "mr", "gu", "bn", "ml", "es", "ar", "fr")
+    val SUPPORTED = listOf("", "en", "hi", "es", "fr", "ar")
 
     fun get(context: Context): String = context.getSharedPreferences(FILE, Context.MODE_PRIVATE).getString(KEY, "") ?: ""
     fun set(context: Context, tag: String) {

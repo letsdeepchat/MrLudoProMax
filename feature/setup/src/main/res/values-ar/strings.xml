@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_title">مباراة جديدة</string>
+    <string name="back">رجوع</string>
+    <string name="game">اللعبة</string>
+    <string name="board_and_variant">اللوح والنمط</string>
+    <string name="layout">تصميم اللوح</string>
+    <string name="players">اللاعبون</string>
+    <string name="player_n">اللاعب %1$d</string>
+    <string name="player_name">لاعب</string>
+    <string name="bot_name">روبوت</string>
+    <string name="rules">القواعد</string>
+    <string name="theme">المظهر</string>
+    <string name="tokens_to_win">أول من يوصل %1$d إلى البيت</string>
+    <string name="turn_timer">مؤقت 10 ثوانٍ</string>
+    <string name="team_up_hint">الزوايا المتقابلة فريق واحد. لا يقصي أعضاء الفريق بعضهم، ويمكنهم مشاركة الخانة، ومن أنهى قطعه يرمي لزميله.</string>
+    <string name="team_up_invalid">نمط الفرق يحتاج 4 لاعبين (2ضد2) أو 6 على اللوح السداسي (3ضد3).</string>
+    <string name="exact_finish">رمية مضبوطة للإنهاء</string>
+    <string name="variant_classic">كلاسيكي</string>
+    <string name="variant_quick">سريع</string>
+    <string name="variant_rush">رَش</string>
+    <string name="variant_team">فرق</string>
+    <string name="rule_fortress">حصن القطعتين</string>
+    <string name="rule_fortress_desc">قطعتان أو أكثر لك في خانة واحدة لا يمكن إقصاؤها.</string>
+    <string name="rule_triple_six">ثلاث ستات تُضيّع الدور</string>
+    <string name="rule_all_places">تابع حتى تحديد كل المراكز</string>
+    <string name="rule_undo">السماح بالتراجع</string>
+    <string name="rule_undo_desc">للعب المحلي بين البشر فقط.</string>
+    <string name="unbeatable_warning">نرد غير عادل: هذا الروبوت يختار رميته بنفسه.</string>
+    <string name="start_match">ابدأ المباراة</string>
+</resources>

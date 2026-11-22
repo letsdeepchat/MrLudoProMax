@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stats_title">الإحصاءات والسجل</string>
+    <string name="back">رجوع</string>
+    <string name="new_profile">ملف جديد</string>
+    <string name="games">المباريات</string>
+    <string name="wins">الانتصارات</string>
+    <string name="losses">الهزائم</string>
+    <string name="captures">مرات الإقصاء</string>
+    <string name="times_captured">مرات التعرض للإقصاء</string>
+    <string name="fortresses">الحصون المبنية</string>
+    <string name="tokens_home">قطع وصلت البيت</string>
+    <string name="snl_record">انتصارات السلم والثعبان</string>
+    <string name="achievements">الإنجازات</string>
+    <string name="history">سجل المباريات</string>
+    <string name="won_by">فاز %1$s</string>
+    <string name="replay">إعادة</string>
+    <string name="replay_step">الحركة %1$d من %2$d</string>
+</resources>

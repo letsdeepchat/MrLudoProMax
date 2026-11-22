@@ -48,7 +48,7 @@ fun SectionCard(title: String, modifier: Modifier = Modifier, content: @Composab
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun <T> ChoiceRow(options: List<T>, selected: T, label: (T) -> String, onSelect: (T) -> Unit, enabled: (T) -> Boolean = { true }) {
+fun <T> ChoiceRow(options: List<T>, selected: T, label: @Composable (T) -> String, onSelect: (T) -> Unit, enabled: (T) -> Boolean = { true }) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         options.forEach { o ->
             FilterChip(selected = o == selected, onClick = { onSelect(o) }, label = { Text(label(o)) }, enabled = enabled(o))

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_studio">ऑडियो स्टूडियो</string>
+    <string name="back">वापस</string>
+    <string name="sound_pack">साउंड पैक</string>
+    <string name="volume">आवाज़</string>
+    <string name="master">मुख्य</string>
+    <string name="effects">खेल ध्वनियाँ</string>
+    <string name="jingles">जीत और हार की धुन</string>
+    <string name="interface_sounds">इंटरफ़ेस</string>
+    <string name="haptics">हैप्टिक्स</string>
+    <string name="haptics_on">कंपन प्रतिक्रिया</string>
+    <string name="haptic_strength">तीव्रता</string>
+</resources>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_title">लूडो सॉवरेन</string>
+    <string name="settings">सेटिंग्स</string>
+    <string name="quick_resume">तुरंत जारी रखें</string>
+    <string name="resume">जारी रखें</string>
+    <string name="play_ludo">लूडो खेलें</string>
+    <string name="play_ludo_sub">कंप्यूटर से या पास एंड प्ले · क्लासिक, क्विक, रश, टीम अप</string>
+    <string name="play_snakes">साँप और सीढ़ी</string>
+    <string name="play_snakes_sub">7 बोर्ड · 2–6 खिलाड़ी</string>
+    <string name="stats">आँकड़े और इतिहास</string>
+    <string name="audio_studio">ऑडियो स्टूडियो</string>
+    <string name="saved_games">सहेजे गए खेल</string>
+    <string name="slot_n">स्लॉट %1$d</string>
+    <string name="delete">हटाएँ</string>
+    <string name="offline_promise">पूरी तरह ऑफ़लाइन। कोई विज्ञापन नहीं, कोई खरीदारी नहीं, सब कुछ खुला।</string>
+    <string name="done">ठीक है</string>
+    <string name="theme">थीम</string>
+    <string name="colorblind">रंग-अंधता अनुकूल गोटियाँ</string>
+    <string name="colorblind_desc">ओकाबे–इटो रंग; हर गोटी पर एक आकृति भी।</string>
+    <string name="gameplay">गेमप्ले</string>
+    <string name="auto_move">स्वचालित चाल</string>
+    <string name="auto_move_desc">केवल एक वैध चाल होने पर अपने आप चलें।</string>
+    <string name="animation_speed">एनिमेशन गति</string>
+    <string name="language">भाषा</string>
+</resources>

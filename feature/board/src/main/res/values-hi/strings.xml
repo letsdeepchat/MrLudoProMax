@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="board_title">लूडो सॉवरेन</string>
+    <string name="back">वापस</string>
+    <string name="undo">पिछली चाल वापस लें</string>
+    <string name="menu">मेनू</string>
+    <string name="save_to_slot">स्लॉट %1$d में सहेजें</string>
+    <string name="saved_to_slot">स्लॉट %1$d में सहेजा गया</string>
+    <string name="game_over">खेल समाप्त</string>
+    <string name="bot_thinking">सोच रहा है…</string>
+    <string name="tap_dice">पासा फेंकने के लिए टैप करें</string>
+    <string name="pick_token">चमकती गोटी चुनें</string>
+    <string name="dice">पासा</string>
+    <string name="winner">%1$s जीता!</string>
+    <string name="done">ठीक है</string>
+    <string name="captures_short">%1$d काटे</string>
+    <string name="fortresses_short">%1$d किले</string>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_studio">استوديو الصوت</string>
+    <string name="back">رجوع</string>
+    <string name="sound_pack">حزمة الأصوات</string>
+    <string name="volume">مستوى الصوت</string>
+    <string name="master">الرئيسي</string>
+    <string name="effects">مؤثرات اللعبة</string>
+    <string name="jingles">نغمات الفوز والخسارة</string>
+    <string name="interface_sounds">الواجهة</string>
+    <string name="haptics">الاهتزاز</string>
+    <string name="haptics_on">ردود الاهتزاز</string>
+    <string name="haptic_strength">الشدة</string>
+</resources>

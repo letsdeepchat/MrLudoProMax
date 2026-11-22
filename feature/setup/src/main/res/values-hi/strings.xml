@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_title">नया मैच</string>
+    <string name="back">वापस</string>
+    <string name="game">खेल</string>
+    <string name="board_and_variant">बोर्ड और प्रकार</string>
+    <string name="layout">बोर्ड लेआउट</string>
+    <string name="players">खिलाड़ी</string>
+    <string name="player_n">खिलाड़ी %1$d</string>
+    <string name="player_name">खिलाड़ी</string>
+    <string name="bot_name">बॉट</string>
+    <string name="rules">नियम</string>
+    <string name="theme">थीम</string>
+    <string name="tokens_to_win">पहले %1$d घर पहुँचाएँ</string>
+    <string name="turn_timer">10 सेकंड का टाइमर</string>
+    <string name="team_up_hint">आमने-सामने के कोने साथी हैं। साथी एक-दूसरे को नहीं काटते, खाने साझा कर सकते हैं, और खत्म कर चुका खिलाड़ी अपने साथी के लिए पासा फेंकता है।</string>
+    <string name="team_up_invalid">टीम अप के लिए 4 खिलाड़ी (2v2) या हेक्स बोर्ड पर 6 खिलाड़ी (3v3) चाहिए।</string>
+    <string name="exact_finish">खत्म करने के लिए सटीक अंक</string>
+    <string name="variant_classic">क्लासिक</string>
+    <string name="variant_quick">क्विक</string>
+    <string name="variant_rush">रश</string>
+    <string name="variant_team">टीम अप</string>
+    <string name="rule_fortress">दोहरी गोटी किला</string>
+    <string name="rule_fortress_desc">एक खाने पर आपकी दो या अधिक गोटियाँ काटी नहीं जा सकतीं।</string>
+    <string name="rule_triple_six">तीन छक्के पर बारी समाप्त</string>
+    <string name="rule_all_places">सभी स्थान तय होने तक खेलें</string>
+    <string name="rule_undo">वापस लेने दें</string>
+    <string name="rule_undo_desc">केवल मनुष्यों वाले पास एंड प्ले में।</string>
+    <string name="unbeatable_warning">निष्पक्ष पासा नहीं: यह बॉट अपना अंक खुद चुनता है।</string>
+    <string name="start_match">मैच शुरू करें</string>
+</resources>

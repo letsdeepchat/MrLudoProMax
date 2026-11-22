@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stats_title">आँकड़े और इतिहास</string>
+    <string name="back">वापस</string>
+    <string name="new_profile">नई प्रोफ़ाइल</string>
+    <string name="games">मैच</string>
+    <string name="wins">जीत</string>
+    <string name="losses">हार</string>
+    <string name="captures">काटी गई गोटियाँ</string>
+    <string name="times_captured">कितनी बार कटे</string>
+    <string name="fortresses">बनाए गए किले</string>
+    <string name="tokens_home">घर पहुँची गोटियाँ</string>
+    <string name="snl_record">साँप-सीढ़ी जीत</string>
+    <string name="achievements">उपलब्धियाँ</string>
+    <string name="history">मैच इतिहास</string>
+    <string name="won_by">%1$s ने जीता</string>
+    <string name="replay">रीप्ले</string>
+    <string name="replay_step">चाल %1$d / %2$d</string>
+</resources>

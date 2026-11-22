@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_studio">Audio Studio</string>
+    <string name="back">Back</string>
+    <string name="sound_pack">Sound pack</string>
+    <string name="volume">Volume</string>
+    <string name="master">Master</string>
+    <string name="effects">Game effects</string>
+    <string name="jingles">Win &amp; lose jingles</string>
+    <string name="interface_sounds">Interface</string>
+    <string name="haptics">Haptics</string>
+    <string name="haptics_on">Vibration feedback</string>
+    <string name="haptic_strength">Strength</string>
+</resources>
