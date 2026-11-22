@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -28,6 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -53,6 +55,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -66,7 +71,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ludosovereign.designsystem.CtaButton
 import com.ludosovereign.designsystem.LocalBoardTheme
+import com.ludosovereign.designsystem.relativeLuminance
 import com.ludosovereign.designsystem.LocalColorblind
 import com.ludosovereign.designsystem.PodDice
 import com.ludosovereign.designsystem.RobotIcon
@@ -109,18 +116,18 @@ fun LudoBoardScreen(
         all.filter { view.yard(it).y < 0 } to all.filter { view.yard(it).y >= 0 }
     }
 
+    val ui = theme.ui
     Box(Modifier.fillMaxSize()) {
-        Canvas(Modifier.fillMaxSize()) { drawBackdrop(theme) }
         Column(Modifier.fillMaxSize().systemBarsPadding()) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
                     onClick = { menu = true; vm.setPaused(true) },
-                    modifier = Modifier.background(Color.Black.copy(alpha = 0.22f), CircleShape),
-                ) { Icon(Icons.Filled.Menu, stringResource(R.string.menu), tint = Color.White) }
+                    modifier = Modifier.background(ui.pill, CircleShape).border(2.dp, ui.pillBorder, CircleShape),
+                ) { Icon(Icons.Filled.Menu, stringResource(R.string.menu), tint = ui.onPill) }
                 Spacer(Modifier.weight(1f))
                 if (undoAllowed && s.canUndo) {
-                    IconButton(onClick = vm::undo, modifier = Modifier.background(Color.Black.copy(alpha = 0.22f), CircleShape)) {
-                        Icon(Icons.Filled.Refresh, stringResource(R.string.undo), tint = Color.White)
+                    IconButton(onClick = vm::undo, modifier = Modifier.background(ui.pill, CircleShape).border(2.dp, ui.pillBorder, CircleShape)) {
+                        Icon(Icons.Filled.Refresh, stringResource(R.string.undo), tint = ui.onPill)
                     }
                 }
             }
@@ -130,14 +137,15 @@ fun LudoBoardScreen(
             BoardCanvas(
                 game = game, events = s.lastEvents, eventSeq = s.eventSeq, selectable = selectable,
                 activeSeat = activeSeat, timings = s.timings, onTokenTap = vm::tapToken, onHop = vm::step,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 6.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 6.dp),
             )
             PodRow(bottomSeats, s, view, top = false, onRoll = vm::roll)
             Spacer(Modifier.height(10.dp))
             Text(
                 hint(s),
                 style = MaterialTheme.typography.bodyMedium,
-                color = theme.onSurface.copy(alpha = 0.85f),
+                color = ui.onBackdrop.copy(alpha = 0.9f),
+                fontWeight = FontWeight.Medium,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
             Spacer(Modifier.weight(1f))
@@ -235,7 +243,8 @@ private fun CornerPod(seat: Int, s: LudoUiState, mirrored: Boolean, compact: Boo
     val diceBox: @Composable () -> Unit = {
         Box(
             Modifier.size(boxSize)
-                .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.45f), Color.Black.copy(alpha = 0.22f))), RoundedCornerShape(14.dp))
+                .background(Brush.verticalGradient(if (active) listOf(Color.Black.copy(alpha = 0.45f), Color.Black.copy(alpha = 0.22f))
+                    else listOf(Color.Black.copy(alpha = 0.22f), Color.Black.copy(alpha = 0.08f))), RoundedCornerShape(14.dp))
                 .border(2.dp, if (active) color.copy(alpha = 0.6f + 0.4f * glow) else Color.White.copy(alpha = 0.15f), RoundedCornerShape(14.dp)),
             contentAlignment = Alignment.Center,
         ) {
@@ -287,24 +296,37 @@ private fun CornerPod(seat: Int, s: LudoUiState, mirrored: Boolean, compact: Boo
             Text(
                 if (used) game.config.players[player].name else "—",
                 style = MaterialTheme.typography.labelLarge, fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
-                color = theme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                color = theme.ui.onBackdrop, maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
             if (used) {
                 val home = game.tokensHome(player)
                 val goal = game.rules.tokensToWin
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                    for (i in 0 until goal) Box(Modifier.size(7.dp).background(if (i < home) color else Color.White.copy(alpha = 0.25f), CircleShape))
-                    Text("$home/$goal", style = MaterialTheme.typography.labelSmall, color = theme.onSurface.copy(alpha = 0.8f))
+                    for (i in 0 until goal) Box(
+                        Modifier.size(8.dp).background(if (i < home) color else theme.ui.onBackdrop.copy(alpha = 0.22f), CircleShape)
+                            .border(1.dp, if (i < home) Color.White else Color.Transparent, CircleShape),
+                    )
+                    Text("$home/$goal", style = MaterialTheme.typography.labelSmall, color = theme.ui.onBackdrop.copy(alpha = 0.85f))
                 }
             }
         }
     }
 
     val shape = RoundedCornerShape(18.dp)
+    // Dimensional plate: lit from above, with a soft lip underneath; the active seat glows in its colour.
+    val lightBackdrop = theme.ui.backdropBottom.relativeLuminance() > 0.4
+    val plateTop = if (lightBackdrop) Color.White.copy(alpha = 0.72f) else Color.White.copy(alpha = 0.16f)
+    val plateBottom = if (lightBackdrop) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.2f)
     val podModifier = Modifier
             .alpha(if (used) 1f else 0.35f)
-            .background(if (active) color.copy(alpha = 0.16f + 0.12f * glow) else Color.Black.copy(alpha = 0.14f), shape)
-            .border(if (active) 2.dp else 1.dp, if (active) color.copy(alpha = 0.5f + 0.5f * glow) else Color.White.copy(alpha = 0.12f), shape)
+            .drawBehind {
+                drawRoundRect(Color.Black.copy(alpha = 0.18f), Offset(0f, 3.dp.toPx()), size, CornerRadius(18.dp.toPx()))
+                if (active) drawRoundRect(color.copy(alpha = 0.28f * glow), Offset(-3.dp.toPx(), -3.dp.toPx()),
+                    Size(size.width + 6.dp.toPx(), size.height + 6.dp.toPx()), CornerRadius(21.dp.toPx()))
+            }
+            .background(Brush.verticalGradient(listOf(plateTop, plateBottom)), shape)
+            .background(if (active) color.copy(alpha = 0.18f + 0.14f * glow) else Color.Transparent, shape)
+            .border(if (active) 2.dp else 1.dp, if (active) color.copy(alpha = 0.6f + 0.4f * glow) else Color.White.copy(alpha = 0.3f), shape)
             .padding(horizontal = 6.dp, vertical = 5.dp)
             .semantics { contentDescription = if (used) "Seat ${game.config.players[player].name}${if (active) ", active" else ""}" else "Empty seat" }
     if (compact) {
@@ -336,14 +358,16 @@ private fun PauseMenu(
         Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.55f)).clickable(onClick = onResume),
         contentAlignment = Alignment.Center,
     ) {
+        val ui = LocalBoardTheme.current.ui
         Card(
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            colors = CardDefaults.cardColors(containerColor = ui.card, contentColor = ui.onCard),
+            border = BorderStroke(2.dp, ui.cardBorder),
             modifier = Modifier.padding(24.dp).fillMaxWidth().clickable(enabled = false) {},
         ) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(stringResource(R.string.paused), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                Button(onClick = onResume, modifier = Modifier.fillMaxWidth().height(50.dp)) { Text(stringResource(R.string.resume)) }
+                CtaButton(stringResource(R.string.resume), onResume, Modifier.fillMaxWidth(), icon = Icons.Filled.PlayArrow)
                 Text(stringResource(R.string.save_game), style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     for (slot in 1..3) OutlinedButton(
@@ -370,6 +394,7 @@ private fun TimerBar(deadline: Long?, seconds: Int) {
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(deadline) { while (true) { now = System.currentTimeMillis(); delay(100) } }
     val frac = ((deadline - now).toFloat() / (seconds * 1000f)).coerceIn(0f, 1f)
+    val ui = LocalBoardTheme.current.ui
     LinearProgressIndicator(progress = { frac }, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-        color = if (frac < 0.3f) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
+        color = if (frac < 0.3f) Color(0xFFFF5252) else ui.cta, trackColor = ui.onBackdrop.copy(alpha = 0.25f))
 }

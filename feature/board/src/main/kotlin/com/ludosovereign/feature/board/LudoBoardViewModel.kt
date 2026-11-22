@@ -83,8 +83,8 @@ class LudoBoardViewModel(
         if (c.finished) saves.clear(SaveRepository.AUTO_SLOT) else saves.save(SaveRepository.AUTO_SLOT, c)
     }
 
-    fun roll() = session.roll()
-    fun tapToken(tokenId: Int) = session.move(tokenId)
+    fun roll() { feedback.touch(); session.roll() }
+    fun tapToken(tokenId: Int) { feedback.touch(); session.move(tokenId) }
     fun undo() = session.undo()
     fun saveToSlot(slot: Int) = viewModelScope.launch { saves.copyAutoSaveTo(slot) }
     fun step() = feedback.step()

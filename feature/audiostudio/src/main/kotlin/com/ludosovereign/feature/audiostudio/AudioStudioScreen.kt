@@ -41,10 +41,12 @@ fun AudioStudioScreen(
     onPreview: (packId: String, event: SoundEvent) -> Unit,
     onBack: () -> Unit,
 ) {
-    Scaffold(topBar = {
+    Scaffold(containerColor = androidx.compose.ui.graphics.Color.Transparent,
+        contentColor = com.ludosovereign.designsystem.LocalBoardTheme.current.ui.onBackdrop, topBar = {
         TopAppBar(
-            title = { Text(stringResource(R.string.audio_studio)) },
+            title = { Text(stringResource(R.string.audio_studio), fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold) },
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } },
+            colors = com.ludosovereign.designsystem.backdropTopBarColors(),
         )
     }) { pad ->
         Column(

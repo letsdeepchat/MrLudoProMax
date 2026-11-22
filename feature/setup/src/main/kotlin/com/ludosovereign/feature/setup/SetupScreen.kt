@@ -59,6 +59,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
@@ -67,10 +68,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ludosovereign.designsystem.BoardThemes
+import com.ludosovereign.designsystem.CtaButton
+import com.ludosovereign.designsystem.PaletteCard
+import com.ludosovereign.designsystem.backdropTopBarColors
 import com.ludosovereign.designsystem.LabeledSwitch
 import com.ludosovereign.designsystem.LocalBoardTheme
 import com.ludosovereign.designsystem.LocalColorblind
 import com.ludosovereign.designsystem.RobotIcon
+import com.ludosovereign.designsystem.darken
 import com.ludosovereign.designsystem.tokenColor
 import com.ludosovereign.engine.BoardTopology
 import com.ludosovereign.engine.BotTier
@@ -178,109 +183,114 @@ fun SetupScreen(
         }
     }
 
+    val ui = LocalBoardTheme.current.ui
     Scaffold(
+        containerColor = Color.Transparent,
+        contentColor = ui.onBackdrop,
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.setup_title)) },
+                title = { Text(stringResource(R.string.setup_title), fontWeight = FontWeight.ExtraBold) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                colors = backdropTopBarColors(),
             )
         },
         bottomBar = {
-            Surface(tonalElevation = 3.dp, shadowElevation = 8.dp) {
-                Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 10.dp)) {
-                    if (type == GameType.LUDO && !teamValid) {
-                        Text(stringResource(R.string.team_up_invalid), color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 6.dp))
-                    }
-                    Button(
-                        onClick = ::start,
-                        enabled = type == GameType.SNAKES || teamValid,
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        shape = RoundedCornerShape(16.dp),
-                    ) {
-                        Icon(Icons.Filled.PlayArrow, null)
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.play), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Column(
+                Modifier.fillMaxWidth()
+                    .background(Brush.verticalGradient(listOf(Color.Transparent, ui.backdropBottom.copy(alpha = 0.95f), ui.backdropBottom)))
+                    .navigationBarsPadding().padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 10.dp),
+            ) {
+                if (type == GameType.LUDO && !teamValid) {
+                    Row(Modifier.padding(bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.Warning, null, tint = ui.cta, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.team_up_invalid), color = ui.onBackdrop, style = MaterialTheme.typography.bodySmall)
                     }
                 }
+                CtaButton(
+                    stringResource(R.string.play), ::start, Modifier.fillMaxWidth(),
+                    icon = Icons.Filled.PlayArrow, enabled = type == GameType.SNAKES || teamValid, height = 56.dp,
+                )
             }
         },
     ) { pad ->
         Column(
             Modifier.fillMaxSize().padding(pad).verticalScroll(rememberScrollState()).padding(horizontal = 14.dp, vertical = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             // --- Top compact controls -------------------------------------------------------------
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                GameType.entries.forEachIndexed { i, g ->
-                    SegmentedButton(
-                        selected = type == g, onClick = { type = g },
-                        shape = SegmentedButtonDefaults.itemShape(i, GameType.entries.size),
-                    ) { Text(if (g == GameType.LUDO) "Ludo" else stringResource(R.string.snakes_ladders)) }
-                }
-            }
-            if (type == GameType.LUDO) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    BoardTopology.entries.forEach { b ->
-                        Pill(if (b == BoardTopology.CLASSIC_4) "Classic 4" else "Hex 6", board == b) { board = b }
+            PaletteCard(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                        GameType.entries.forEachIndexed { i, g ->
+                            SegmentedButton(
+                                selected = type == g, onClick = { type = g },
+                                shape = SegmentedButtonDefaults.itemShape(i, GameType.entries.size),
+                            ) { Text(if (g == GameType.LUDO) "Ludo" else stringResource(R.string.snakes_ladders), fontWeight = FontWeight.SemiBold) }
+                        }
                     }
-                    Spacer(Modifier.width(6.dp))
-                    Variant.entries.forEach { v -> Pill(v.label(), variant == v) { variant = v } }
-                }
-                when (variant) {
-                    Variant.QUICK -> FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf(1, 2).forEach { n -> Pill(stringResource(R.string.tokens_to_win, n), quickTarget == n) { quickTarget = n } }
+                    if (type == GameType.LUDO) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            BoardTopology.entries.forEach { b ->
+                                Pill(if (b == BoardTopology.CLASSIC_4) "Classic 4" else "Hex 6", board == b) { board = b }
+                            }
+                            Spacer(Modifier.width(6.dp))
+                            Variant.entries.forEach { v -> Pill(v.label(), variant == v) { variant = v } }
+                        }
+                        when (variant) {
+                            Variant.QUICK -> FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                listOf(1, 2).forEach { n -> Pill(stringResource(R.string.tokens_to_win, n), quickTarget == n) { quickTarget = n } }
+                            }
+                            Variant.RUSH -> LabeledSwitch(stringResource(R.string.turn_timer), rushTimer, { rushTimer = it })
+                            Variant.TEAM_UP -> Text(stringResource(R.string.team_up_hint), style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            else -> Unit
+                        }
+                    } else {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            SnlLayouts.ALL.forEach { l -> Pill(l.displayName, snlLayout == l) { snlLayout = l } }
+                        }
                     }
-                    Variant.RUSH -> LabeledSwitch(stringResource(R.string.turn_timer), rushTimer, { rushTimer = it })
-                    Variant.TEAM_UP -> Text(stringResource(R.string.team_up_hint), style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    else -> Unit
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        (2..maxPlayers).forEach { n -> Pill("${n}P", count == n) { count = n } }
+                    }
                 }
-            } else {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    SnlLayouts.ALL.forEach { l -> Pill(l.displayName, snlLayout == l) { snlLayout = l } }
-                }
-            }
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                (2..maxPlayers).forEach { n -> Pill("${n}P", count == n) { count = n } }
             }
 
             // --- Inline roster ------------------------------------------------------------------
-            Card(
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-            ) {
+            PaletteCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(vertical = 4.dp)) {
                     for (i in 0 until count) {
                         RosterRow(rows[i], i, ludo = type == GameType.LUDO, onToggle = { toggleKind(i) }, onColor = { cycleColor(i) })
-                        if (i < count - 1) HorizontalDivider(Modifier.padding(horizontal = 12.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                        if (i < count - 1) HorizontalDivider(Modifier.padding(horizontal = 12.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
                     }
                 }
             }
 
             // --- House rules & theme (folded) ----------------------------------------------------
-            Row(
-                Modifier.fillMaxWidth().clickable { rulesOpen = !rulesOpen }.padding(vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(stringResource(R.string.rules_and_theme), style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                Icon(if (rulesOpen) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown, null)
-            }
-            AnimatedVisibility(rulesOpen) {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    if (type == GameType.LUDO) {
-                        LabeledSwitch(stringResource(R.string.rule_fortress), fortress, { fortress = it }, stringResource(R.string.rule_fortress_desc))
-                        LabeledSwitch(stringResource(R.string.rule_triple_six), tripleSix, { tripleSix = it })
-                        LabeledSwitch(stringResource(R.string.rule_all_places), allPlacements, { allPlacements = it })
-                        LabeledSwitch(stringResource(R.string.rule_undo), undo, { undo = it }, stringResource(R.string.rule_undo_desc), enabled = allHuman)
-                    } else {
-                        LabeledSwitch(stringResource(R.string.exact_finish), snlExact, { snlExact = it })
-                    }
-                    Text(stringResource(R.string.theme), style = MaterialTheme.typography.labelLarge)
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        BoardThemes.ALL.forEach { t -> Pill(t.name, themeId == t.id) { onThemeChange(t.id) } }
+            PaletteCard(Modifier.fillMaxWidth()) {
+                Row(
+                    Modifier.fillMaxWidth().clickable { rulesOpen = !rulesOpen }.padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(stringResource(R.string.rules_and_theme), style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                    Icon(if (rulesOpen) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown, null, tint = ui.primary)
+                }
+                AnimatedVisibility(rulesOpen) {
+                    Column(Modifier.padding(start = 14.dp, end = 14.dp, bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        if (type == GameType.LUDO) {
+                            LabeledSwitch(stringResource(R.string.rule_fortress), fortress, { fortress = it }, stringResource(R.string.rule_fortress_desc))
+                            LabeledSwitch(stringResource(R.string.rule_triple_six), tripleSix, { tripleSix = it })
+                            LabeledSwitch(stringResource(R.string.rule_all_places), allPlacements, { allPlacements = it })
+                            LabeledSwitch(stringResource(R.string.rule_undo), undo, { undo = it }, stringResource(R.string.rule_undo_desc), enabled = allHuman)
+                        } else {
+                            LabeledSwitch(stringResource(R.string.exact_finish), snlExact, { snlExact = it })
+                        }
+                        Text(stringResource(R.string.theme), style = MaterialTheme.typography.labelLarge)
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            BoardThemes.ALL.forEach { t -> Pill(t.name, themeId == t.id) { onThemeChange(t.id) } }
+                        }
                     }
                 }
             }
@@ -313,7 +323,7 @@ private fun RosterRow(row: PlayerRow, index: Int, ludo: Boolean, onToggle: () ->
     Column(Modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
-                Modifier.size(30.dp).background(color, CircleShape).border(2.dp, Color.White.copy(alpha = 0.85f), CircleShape)
+                Modifier.size(30.dp).background(color, CircleShape).border(2.dp, color.darken(0.35f), CircleShape)
                     .clickable(onClick = onColor)
                     .semantics { contentDescription = "$label colour" },
             )

@@ -30,6 +30,30 @@ class BoardGeometryTest {
         }
     }
 
+    /** Finished tokens sit inside their own Home wedge, well apart, for every count from 1 to 4. */
+    @Test fun homeSlotsStayInsideTheirWedge() {
+        for (t in BoardTopology.entries) {
+            val g = BoardGeometry(t)
+            val poly = g.centerPolygon()
+            for (seat in 0 until t.seats) {
+                val a = poly[(seat - 1 + t.seats) % t.seats]; val b = poly[seat]
+                for (n in 1..4) {
+                    val pts = (0 until n).map { g.homeSlot(seat, it, n) }
+                    pts.forEach { p -> assertTrue(insideTriangle(p, Pt(0f, 0f), a, b), "$t seat $seat n=$n: $p outside its wedge") }
+                    for (i in pts.indices) for (j in i + 1 until pts.size) {
+                        assertTrue(dist(pts[i], pts[j]) > 0.55, "$t seat $seat n=$n: slots $i and $j overlap")
+                    }
+                }
+            }
+        }
+    }
+
+    private fun insideTriangle(p: Pt, a: Pt, b: Pt, c: Pt): Boolean {
+        fun cross(o: Pt, u: Pt, v: Pt) = (u.x - o.x) * (v.y - o.y) - (u.y - o.y) * (v.x - o.x)
+        val d1 = cross(a, b, p); val d2 = cross(b, c, p); val d3 = cross(c, a, p)
+        return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0))
+    }
+
     /** Writes SVG previews to build/preview for eyeballing the layout. */
     @Test fun writeSvgPreviews() {
         val colors = listOf("#E53935", "#43A047", "#FDD835", "#1E88E5", "#8E24AA", "#FB8C00")

@@ -75,6 +75,28 @@ class BoardGeometry(val topology: BoardTopology) {
         return Pt(base.x - sin(a).toFloat() * spread, base.y + cos(a).toFloat() * spread)
     }
 
+    /**
+     * Balanced resting spot for the [k]-th of [n] finished tokens inside [seat]'s Home wedge
+     * (the triangle between the centre and the base of its arm): one or two sit mid-wedge, three
+     * and four form a small pyramid, so finished pawns stay large instead of shrinking to dots.
+     */
+    fun homeSlot(seat: Int, k: Int, n: Int): Pt {
+        // (t, s): t = fraction of the way from the centre to the arm base, s = fraction of the
+        // wedge's half-width at that depth (negative = counter-clockwise side).
+        val (t, s) = when (n) {
+            1 -> 0.62f to 0f
+            2 -> 0.62f to (if (k == 0) -0.5f else 0.5f)
+            3 -> listOf(0.42f to 0f, 0.8f to -0.56f, 0.8f to 0.56f)[k]
+            4 -> listOf(0.38f to 0f, 0.8f to -0.64f, 0.8f to 0f, 0.8f to 0.64f)[k]
+            else -> 0.7f to ((k - (n - 1) / 2f) / n * 1.4f)
+        }
+        val a = armAngle(seat)
+        val ux = cos(a).toFloat(); val uy = sin(a).toFloat()
+        val d = t * armBase
+        val lane = s * d * kotlin.math.tan(PI / seats).toFloat()
+        return Pt(ux * d - uy * lane, uy * d + ux * lane)
+    }
+
     fun yardCenter(seat: Int): Pt {
         val a = armAngle(seat) + PI / seats
         val r = if (seats == 4) 4.5f * sqrt(2f) else armBase + 4.1f
@@ -86,7 +108,8 @@ class BoardGeometry(val topology: BoardTopology) {
 
     fun yardSlot(seat: Int, localIndex: Int): Pt {
         val c = yardCenter(seat)
-        val d = yardRadius * 0.45f
+        // Cross board: four bases on a 1.9-cell square inside the yard's white 4×4 box.
+        val d = if (seats == 4) 0.95f else yardRadius * 0.5f
         val off = when (localIndex) {
             0 -> Pt(-d, -d); 1 -> Pt(d, -d); 2 -> Pt(-d, d); else -> Pt(d, d)
         }

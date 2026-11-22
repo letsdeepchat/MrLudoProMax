@@ -16,7 +16,13 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.ui.graphics.Color
+import com.ludosovereign.designsystem.LocalBoardTheme
+import com.ludosovereign.designsystem.PaletteCard
+import com.ludosovereign.designsystem.backdropTopBarColors
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -83,22 +89,26 @@ fun StatsScreen(
 ) {
     var newProfile by remember { mutableStateOf<String?>(null) }
     val active = profiles.firstOrNull { it.id == activeProfileId } ?: profiles.firstOrNull()
-    Scaffold(topBar = {
+    val ui = LocalBoardTheme.current.ui
+    Scaffold(containerColor = Color.Transparent, contentColor = ui.onBackdrop, topBar = {
         TopAppBar(
-            title = { Text(stringResource(R.string.stats_title)) },
+            title = { Text(stringResource(R.string.stats_title), fontWeight = FontWeight.ExtraBold) },
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } },
             actions = { IconButton(onClick = { newProfile = "" }) { Icon(Icons.Filled.Add, stringResource(R.string.new_profile)) } },
+            colors = backdropTopBarColors(),
         )
     }) { pad ->
         LazyColumn(Modifier.fillMaxSize().padding(pad).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    profiles.forEach { p -> FilterChip(selected = p.id == active?.id, onClick = { onSelectProfile(p.id) }, label = { Text(p.name) }) }
+                PaletteCard(Modifier.fillMaxWidth()) {
+                    Row(Modifier.padding(horizontal = 12.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        profiles.forEach { p -> FilterChip(selected = p.id == active?.id, onClick = { onSelectProfile(p.id) }, label = { Text(p.name) }) }
+                    }
                 }
             }
             if (active != null) item {
                 val rank = Progression.rankFor(active.xp)
-                Card(Modifier.fillMaxWidth()) {
+                PaletteCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) {
                         Text(rank.name.lowercase().replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                         Text("${active.xp} XP", style = MaterialTheme.typography.bodyMedium)
@@ -110,7 +120,7 @@ fun StatsScreen(
             item {
                 val s = stats ?: ProfileStatsEntity(0)
                 val winPct = if (s.games > 0) 100 * s.wins / s.games else 0
-                Card(Modifier.fillMaxWidth()) {
+                PaletteCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         StatLine(stringResource(R.string.games), "${s.games}")
                         StatLine(stringResource(R.string.wins), "${s.wins} ($winPct%)")
@@ -123,20 +133,28 @@ fun StatsScreen(
                     }
                 }
             }
-            item { Text(stringResource(R.string.achievements), style = MaterialTheme.typography.titleMedium) }
-            items(achievements(stats, active?.xp ?: 0)) { a ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(if (a.unlocked) Icons.Filled.Check else Icons.Filled.Lock, null,
-                        tint = if (a.unlocked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)
-                    Column(Modifier.padding(start = 10.dp)) {
-                        Text(a.title, fontWeight = FontWeight.SemiBold)
-                        Text(a.description, style = MaterialTheme.typography.bodySmall)
+            item { Text(stringResource(R.string.achievements), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
+            item {
+                PaletteCard(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        achievements(stats, active?.xp ?: 0).forEach { a ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(if (a.unlocked) Icons.Filled.Check else Icons.Filled.Lock, null,
+                                    tint = if (a.unlocked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)
+                                Column(Modifier.padding(start = 10.dp)) {
+                                    Text(a.title, fontWeight = FontWeight.SemiBold)
+                                    Text(a.description, style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                        }
                     }
                 }
             }
-            item { Text(stringResource(R.string.history), style = MaterialTheme.typography.titleMedium) }
+            item { Text(stringResource(R.string.history), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
             items(history, key = { it.id }) { h ->
-                Card(onClick = { if (h.kind == "LUDO") onOpenReplay(h.id) }, modifier = Modifier.fillMaxWidth()) {
+                Card(onClick = { if (h.kind == "LUDO") onOpenReplay(h.id) }, modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = ui.card, contentColor = ui.onCard),
+                    border = BorderStroke(1.5.dp, ui.cardBorder)) {
                     Column(Modifier.padding(12.dp)) {
                         Text("${h.variant.lowercase().replace('_', ' ')} · ${h.board.lowercase().replace('_', ' ')}", fontWeight = FontWeight.SemiBold)
                         Text(stringResource(R.string.won_by, h.winnerName), style = MaterialTheme.typography.bodySmall)
@@ -172,17 +190,24 @@ fun ReplayScreen(log: MatchLog, onBack: () -> Unit) {
     var step by remember { mutableFloatStateOf(log.actions.size.toFloat()) }
     val events = remember(step.toInt()) { mutableListOf<GameEvent>() }
     val state = remember(step.toInt()) { log.replay(step.toInt()) }
-    Scaffold(topBar = {
-        TopAppBar(title = { Text(stringResource(R.string.replay)) },
-            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } })
+    val ui = LocalBoardTheme.current.ui
+    Scaffold(containerColor = Color.Transparent, contentColor = ui.onBackdrop, topBar = {
+        TopAppBar(title = { Text(stringResource(R.string.replay), fontWeight = FontWeight.ExtraBold) },
+            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } },
+            colors = backdropTopBarColors())
     }) { pad ->
-        Column(Modifier.fillMaxSize().padding(pad).padding(16.dp)) {
+        Column(Modifier.fillMaxSize().padding(pad).padding(horizontal = 4.dp, vertical = 8.dp)) {
             BoardCanvas(state, events, step.toLong(), selectable = emptySet(), activeSeat = state.seatOf(state.current),
                 timings = com.ludosovereign.session.AnimationTimings(), onTokenTap = {}, onHop = {},
                 modifier = Modifier.fillMaxWidth())
-            Text(stringResource(R.string.replay_step, step.toInt(), log.actions.size))
-            Slider(value = step, onValueChange = { step = it }, valueRange = 0f..log.actions.size.toFloat().coerceAtLeast(1f),
-                steps = 0)
+            Spacer(Modifier.height(10.dp))
+            PaletteCard(Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
+                Column(Modifier.padding(14.dp)) {
+                    Text(stringResource(R.string.replay_step, step.toInt(), log.actions.size), fontWeight = FontWeight.SemiBold)
+                    Slider(value = step, onValueChange = { step = it }, valueRange = 0f..log.actions.size.toFloat().coerceAtLeast(1f),
+                        steps = 0)
+                }
+            }
         }
     }
 }

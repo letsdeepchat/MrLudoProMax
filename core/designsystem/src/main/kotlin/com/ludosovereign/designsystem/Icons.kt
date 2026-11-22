@@ -30,3 +30,31 @@ val RobotIcon: ImageVector by lazy {
         }
     }.build()
 }
+
+/** Trophy cup for Stats & History. */
+val TrophyIcon: ImageVector by lazy {
+    ImageVector.Builder("Trophy", 24.dp, 24.dp, 24f, 24f).apply {
+        path(fill = SolidColor(Color.Black), pathFillType = PathFillType.EvenOdd) {
+            // Cup with side handles
+            moveTo(6f, 3f); lineTo(18f, 3f); lineTo(18f, 5f); lineTo(21f, 5f); lineTo(21f, 8f)
+            arcToRelative(4f, 4f, 0f, false, true, -3.6f, 4f)
+            arcToRelative(6f, 6f, 0f, false, true, -4.4f, 3.9f); lineTo(13f, 18f); lineTo(16f, 18f); lineTo(16f, 21f)
+            lineTo(8f, 21f); lineTo(8f, 18f); lineTo(11f, 18f); lineTo(11f, 15.9f)
+            arcToRelative(6f, 6f, 0f, false, true, -4.4f, -3.9f)
+            arcToRelative(4f, 4f, 0f, false, true, -3.6f, -4f); lineTo(3f, 5f); lineTo(6f, 5f); close()
+            moveTo(5f, 7f); lineTo(5f, 8f); arcToRelative(2f, 2f, 0f, false, false, 1.1f, 1.8f); lineTo(6f, 7f); close()
+            moveTo(19f, 7f); lineTo(18f, 7f); lineTo(17.9f, 9.8f); arcToRelative(2f, 2f, 0f, false, false, 1.1f, -1.8f); close()
+        }
+    }.build()
+}
+
+/** Two beamed notes for Audio Studio. */
+val MusicIcon: ImageVector by lazy {
+    ImageVector.Builder("Music", 24.dp, 24.dp, 24f, 24f).apply {
+        path(fill = SolidColor(Color.Black)) {
+            moveTo(9f, 4f); lineTo(21f, 2f); lineTo(21f, 16f)
+            arcToRelative(3f, 3f, 0f, true, true, -2f, -2.83f); lineTo(19f, 6.4f); lineTo(11f, 7.7f); lineTo(11f, 18f)
+            arcToRelative(3f, 3f, 0f, true, true, -2f, -2.83f); close()
+        }
+    }.build()
+}
