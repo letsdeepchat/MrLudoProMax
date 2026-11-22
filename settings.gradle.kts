@@ -28,4 +28,4 @@ dependencyResolutionManagement {
 rootProject.name = "LudoSovereign"
 
 // Pure-Kotlin modules: build anywhere with a JDK.
-include(":core:engine", ":core:ai", ":core:session")
+include(":core:engine", ":core:ai", ":core:session", ":core:audio")
