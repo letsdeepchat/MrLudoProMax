@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
@@ -61,6 +62,7 @@ import com.ludosovereign.designsystem.lighten
 import com.ludosovereign.designsystem.relativeLuminance
 import com.ludosovereign.designsystem.starPath
 import com.ludosovereign.designsystem.tokenColor
+import com.ludosovereign.designsystem.yardColor
 import com.ludosovereign.engine.BoardTopology.Companion.BASE
 import com.ludosovereign.engine.GameEvent
 import com.ludosovereign.engine.GameState
@@ -140,14 +142,17 @@ class BoardView(val geo: BoardGeometry) {
         if (from == BASE || to == BASE) emptyList() else geo.path(seat, from, to, localIndex).map(::v)
 
     companion object {
-        /** Centre-lane width relative to a yard column on the cross board. */
-        const val LANE_WEIGHT = 1.3f
+        /** Centre-lane width relative to a yard column on the cross board (1 = classic square grid). */
+        const val LANE_WEIGHT = 1.0f
 
-        /** Bevelled frame thickness around the board, in board units. */
-        const val FRAME = 0.18f
+        /** Margin around the board for its outline and shadow, in board units. */
+        const val FRAME = 0.08f
 
-        /** Pin head radius as a fraction of [tile]; with its white outline a lone pawn spans ~86% of a tile. */
-        const val PIN_R = 0.34f
+        /** Pin head radius as a fraction of [tile]: a lone pawn spans ~80% of a tile and stands ~1.2 tiles tall. */
+        const val PIN_R = 0.38f
+
+        /** How far below a tile's centre a pawn's tip touches down, as a fraction of [tile]. */
+        const val TIP_DROP = 0.28f
     }
 }
 
@@ -261,6 +266,11 @@ fun BoardCanvas(
     val seatColor = { seat: Int ->
         val p = game.config.seats.indexOf(seat)
         if (p >= 0) playerColors[p] else lerp(theme.tokens[seat % theme.tokens.size], Color(0xFFBDBDBD), 0.75f)
+    }
+    val yardColor = { seat: Int ->
+        val p = game.config.seats.indexOf(seat)
+        if (p >= 0) theme.yardColor(game.config.players[p].colorIndex, colorblind)
+        else lerp(theme.yardColor(seat, colorblind), Color(0xFFBDBDBD), 0.75f)
     }
     val tap = { id: Int ->
         tapScope.launch { visuals[id].press.snapTo(1f); visuals[id].press.animateTo(0f, spring(0.5f, 700f)) }
@@ -396,7 +406,7 @@ fun BoardCanvas(
         val origin = Offset(size.width / 2, size.height / 2) + Offset(shake * unit, 0f)
         fun px(o: Offset) = origin + o * unit
 
-        drawBoard(game, view, theme, unit, ::px, seatColor, activeSeat, pulse)
+        drawBoard(game, view, theme, unit, ::px, seatColor, yardColor, activeSeat, pulse)
 
         // Finished pawns: a ✓ badge pops into each emptied yard slot.
         for (id in game.tokens.indices) {
@@ -404,7 +414,7 @@ fun BoardCanvas(
             val k = tickPop[id] ?: if (prevTokens[id] != homeProgress) 0f else 1f
             if (k <= 0f) continue
             val seat = game.seatOf(id / tpp)
-            val slotR = unit * (if (view.cross) 0.55f * view.outer else 0.42f)
+            val slotR = unit * (if (view.cross) 0.5f * view.outer else 0.42f)
             drawTick(px(view.v(view.geo.yardSlot(seat, id % tpp))), slotR * 0.86f * k)
         }
 
@@ -428,15 +438,24 @@ fun BoardCanvas(
             drawCircle(r.color.copy(alpha = 0.75f * fade), unit * tile * (0.26f + 0.3f * r.t), c, style = Stroke(unit * tile * 0.07f * fade + 1f))
         }
 
-        // Selection rings under movable pawns.
-        for (id in selectable) {
-            val g = px(visuals[id].pos)
-            rotate(spin, g) {
-                drawCircle(theme.accent.copy(alpha = 0.45f + 0.4f * pulse), unit * tile * 0.5f, g,
-                    style = Stroke(unit * tile * 0.1f, cap = StrokeCap.Round,
-                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(unit * tile * 0.3f, unit * tile * 0.17f))))
+        // Base rings: each pawn out on the board stands on a ring of its own colour; pawns that can
+        // move get a rotating dashed ring instead.
+        for (id in game.tokens.indices) {
+            val v = visuals[id]
+            val t = game.tokens[id]
+            val g = px(v.pos + Offset(0f, BoardView.TIP_DROP * tile * v.scale))
+            if (id in selectable) {
+                drawCircle(Color.White.copy(alpha = 0.35f * pulse), unit * tile * 0.36f, g)
+                rotate(spin, g) {
+                    drawCircle(theme.selectRing.copy(alpha = 0.7f + 0.3f * pulse), unit * tile * 0.4f, g,
+                        style = Stroke(unit * tile * 0.09f, cap = StrokeCap.Round,
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(unit * tile * 0.22f, unit * tile * 0.12f))))
+                }
+            } else if (t != BASE && t != homeProgress) {
+                val fade = 1f - (v.lift / 0.45f).coerceIn(0f, 1f)
+                drawCircle(playerColors[id / tpp].darken(0.3f).copy(alpha = 0.85f * fade), unit * tile * 0.3f * v.scale, g,
+                    style = Stroke(unit * tile * 0.065f * v.scale))
             }
-            drawCircle(Color.White.copy(alpha = 0.3f * pulse), unit * tile * 0.42f, g)
         }
 
         // Pawns, back to front; moving / selectable ones on top.
@@ -446,7 +465,7 @@ fun BoardCanvas(
             val owner = id / tpp
             val r = unit * tile * BoardView.PIN_R * v.scale * (1f - 0.14f * v.press.value)
             val raise = if (id in selectable) 0.18f + 0.08f * pulse else 0f
-            val ground = px(v.pos + Offset(0f, 0.36f * tile * v.scale))
+            val ground = px(v.pos + Offset(0f, BoardView.TIP_DROP * tile * v.scale))
             val sq = v.squash.value * (1f - (v.lift / 0.45f).coerceIn(0f, 1f))
             drawPin(
                 ground, r, playerColors[owner],
@@ -563,6 +582,7 @@ private fun DrawScope.drawBoard(
     unit: Float,
     px: (Offset) -> Offset,
     seatColor: (Int) -> Color,
+    yardColor: (Int) -> Color,
     activeSeat: Int,
     pulse: Float,
 ) {
@@ -570,143 +590,113 @@ private fun DrawScope.drawBoard(
     val geo = view.geo
     val cross = view.cross
     val e = view.extent
-    val f = BoardView.FRAME
-    val frameBrush = Brush.verticalGradient(
-        listOf(theme.frame.lighten(0.28f), theme.frame, theme.frame.darken(0.4f)),
-        startY = px(Offset(0f, -e - f)).y, endY = px(Offset(0f, e + f)).y,
-    )
-    // Drop shadow, bevelled frame with a lit top edge, then the board slab.
+    val gridW = maxOf(unit * 0.03f, 1f)
+
+    // Board slab: rounded corners and a soft shadow; everything else is clipped to it.
+    val slab = Path()
     if (cross) {
-        val outerTl = px(Offset(-e - f, -e - f)); val outerSz = Size(2 * (e + f) * unit, 2 * (e + f) * unit)
-        drawRoundRect(Color.Black.copy(alpha = 0.28f), outerTl + Offset(0f, unit * 0.14f), outerSz, CornerRadius(unit * 0.5f))
-        drawRoundRect(frameBrush, outerTl, outerSz, CornerRadius(unit * 0.5f))
-        drawRoundRect(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.5f), Color.Transparent), startY = outerTl.y, endY = outerTl.y + outerSz.height * 0.5f),
-            outerTl + Offset(unit * 0.03f, unit * 0.03f), Size(outerSz.width - unit * 0.06f, outerSz.height - unit * 0.06f),
-            CornerRadius(unit * 0.47f), style = Stroke(unit * 0.035f))
-        drawRoundRect(theme.boardBase, px(Offset(-e, -e)), Size(2 * e * unit, 2 * e * unit), CornerRadius(unit * 0.22f))
+        val tl = px(Offset(-e, -e)); val sz = Size(2 * e * unit, 2 * e * unit)
+        drawRoundRect(Color.Black.copy(alpha = 0.25f), tl + Offset(0f, unit * 0.12f), sz, CornerRadius(unit * 0.32f))
+        slab.addRoundRect(androidx.compose.ui.geometry.RoundRect(tl.x, tl.y, tl.x + sz.width, tl.y + sz.height, CornerRadius(unit * 0.32f)))
     } else {
         val c0 = px(Offset.Zero)
-        drawCircle(Color.Black.copy(alpha = 0.28f), (e + f) * unit, c0 + Offset(0f, unit * 0.14f))
-        drawCircle(frameBrush, (e + f) * unit, c0)
-        drawCircle(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.5f), Color.Transparent), startY = c0.y - (e + f) * unit, endY = c0.y),
-            (e + f) * unit - unit * 0.03f, c0, style = Stroke(unit * 0.035f))
-        drawCircle(theme.boardBase, e * unit, c0)
+        drawCircle(Color.Black.copy(alpha = 0.25f), e * unit, c0 + Offset(0f, unit * 0.12f))
+        slab.addOval(Rect(c0, e * unit))
     }
+    drawPath(slab, theme.boardBase)
 
-    // Yards: lit colour block, a slim bezel around a recessed white container, four sunken wells.
-    for (seat in 0 until topo.seats) {
-        val used = seat in game.config.seats
-        val col = seatColor(seat)
-        val c = px(view.yard(seat))
-        val active = seat == activeSeat
-        val wellR = unit * (if (cross) 0.55f * view.outer else 0.42f)
-        if (cross) {
-            val r = view.yardRect(seat)
-            val tl = px(r.topLeft); val sz = Size(r.width * unit, r.height * unit)
-            drawRoundRect(Brush.linearGradient(listOf(col.lighten(0.16f), col, col.darken(0.14f)), tl, tl + Offset(sz.width, sz.height)),
-                tl, sz, CornerRadius(unit * 0.28f))
-            drawRoundRect(theme.frame.copy(alpha = 0.55f), tl, sz, CornerRadius(unit * 0.28f), style = Stroke(unit * 0.05f))
-            val bz = 0.5f * view.outer * unit
-            val itl = tl + Offset(bz, bz); val isz = Size(sz.width - 2 * bz, sz.height - 2 * bz)
-            val icr = CornerRadius(unit * 0.5f)
-            drawRoundRect(theme.yardInner.copy(alpha = if (used) 1f else 0.6f), itl, isz, icr)
-            // Recessed: a soft shadow under the top edge and a darker rim.
-            drawRoundRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.2f), Color.Transparent), startY = itl.y, endY = itl.y + unit * 0.5f),
-                itl, isz, icr)
-            drawRoundRect(col.darken(0.35f).copy(alpha = 0.55f), itl, isz, icr, style = Stroke(unit * 0.045f))
-            if (active) {
-                drawRoundRect(Color.White.copy(alpha = 0.4f + 0.55f * pulse), tl + Offset(unit * 0.1f, unit * 0.1f),
-                    Size(sz.width - unit * 0.2f, sz.height - unit * 0.2f), CornerRadius(unit * 0.24f), style = Stroke(unit * (0.13f + 0.09f * pulse)))
-            }
-        } else {
-            val r = geo.yardRadius * unit
-            drawCircle(Brush.linearGradient(listOf(col.lighten(0.16f), col, col.darken(0.14f)), c - Offset(r, r), c + Offset(r, r)), r, c)
-            drawCircle(theme.frame.copy(alpha = 0.55f), r, c, style = Stroke(unit * 0.05f))
-            val ir = r * 0.9f
-            drawCircle(theme.yardInner.copy(alpha = if (used) 1f else 0.6f), ir, c)
-            drawCircle(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.2f), Color.Transparent), startY = c.y - ir, endY = c.y - ir + unit * 0.5f), ir, c)
-            drawCircle(col.darken(0.35f).copy(alpha = 0.55f), ir, c, style = Stroke(unit * 0.045f))
-            if (active) drawCircle(Color.White.copy(alpha = 0.4f + 0.55f * pulse), r - unit * 0.1f, c, style = Stroke(unit * (0.13f + 0.09f * pulse)))
-        }
-        for (k in 0..3) {
-            val s = px(view.v(geo.yardSlot(seat, k)))
-            drawCircle(col.copy(alpha = 0.2f), wellR, s)
-            // Inner shadow, heavier at the top: the well is sunk into the container.
-            drawCircle(Brush.radialGradient(0f to Color.Transparent, 0.62f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.3f),
-                center = s + Offset(0f, wellR * 0.2f), radius = wellR * 1.12f), wellR, s)
-            drawCircle(col, wellR, s, style = Stroke(unit * (if (cross) 0.11f else 0.09f)))
-            drawArc(Color.White.copy(alpha = 0.75f), 25f, 130f, false, s - Offset(wellR * 1.08f, wellR * 1.08f), Size(wellR * 2.16f, wellR * 2.16f),
-                style = Stroke(unit * 0.035f, cap = StrokeCap.Round))
-        }
-    }
-
-    // Centre: one lit wedge per seat, separated by crisp lines.
-    val poly = geo.centerPolygon().map(view::v)
-    val center = px(Offset.Zero)
-    for (seat in 0 until topo.seats) {
-        val a = px(poly[(seat - 1 + topo.seats) % topo.seats]); val b = px(poly[seat])
-        val path = Path().apply { moveTo(center.x, center.y); lineTo(a.x, a.y); lineTo(b.x, b.y); close() }
-        val col = seatColor(seat)
-        drawPath(path, Brush.linearGradient(listOf(col.darken(0.16f), col.lighten(0.1f)), center, (a + b) / 2f))
-        drawPath(path, theme.frame, style = Stroke(unit * 0.05f))
-    }
-
-    // Track cells: crisp borders, coloured start squares, player-coloured stars on safe squares.
-    fun cell(pt: Pt, arm: Int, fill: Color) {
-        if (cross) {
-            val r = view.tileRect(pt)
-            val tl = px(r.topLeft); val sz = Size(r.width * unit, r.height * unit)
-            drawRect(fill, tl, sz)
-            drawRect(theme.cellBorder, tl, sz, style = Stroke(unit * 0.045f))
-        } else {
-            val p = px(view.v(pt)); val cs = unit * 0.98f
-            rotate(view.armDeg(arm), p) {
-                val tl = p - Offset(cs / 2, cs / 2)
-                drawRect(fill, tl, Size(cs, cs))
-                drawRect(theme.cellBorder, tl, Size(cs, cs), style = Stroke(unit * 0.045f))
-            }
-        }
-    }
-    val starR = unit * view.tile * 0.36f
-    for (c in 0 until topo.trackLength) {
-        val (arm, lane, depth) = geo.laneDepthOf(c)
-        val pt = geo.trackCell(c)
-        val p = px(view.v(pt))
-        val startSeat = (0 until topo.seats).firstOrNull { topo.startCell(it) == c }
-        val side = seatColor(arm)
-        val safe = topo.isSafeCell(c)
-        cell(pt, arm, when {
-            startSeat != null -> seatColor(startSeat)
-            safe -> lerp(theme.cell, side, 0.13f)
-            else -> theme.cell
-        })
-        if (safe) {
-            val star = starPath(p, starR)
-            if (startSeat != null) {
-                drawPath(star, Color.White)
-                drawPath(star, side.darken(0.4f), style = Stroke(unit * 0.045f, join = StrokeJoin.Round))
+    clipPath(slab) {
+        // Yards: solid colour, a white inner box, four coloured bases.
+        for (seat in 0 until topo.seats) {
+            val used = seat in game.config.seats
+            val col = yardColor(seat)
+            val c = px(view.yard(seat))
+            val active = seat == activeSeat
+            if (cross) {
+                val r = view.yardRect(seat)
+                val tl = px(r.topLeft); val sz = Size(r.width * unit, r.height * unit)
+                drawRect(col, tl, sz)
+                val bz = view.outer * unit
+                drawRect(theme.yardInner.copy(alpha = if (used) 1f else 0.7f), tl + Offset(bz, bz), Size(sz.width - 2 * bz, sz.height - 2 * bz))
+                if (active) {
+                    // Whose turn: a soft white pulse just outside the white box.
+                    val g = unit * (0.05f + 0.05f * pulse)
+                    drawRect(Color.White.copy(alpha = 0.3f + 0.45f * pulse), tl + Offset(bz - g * 1.5f, bz - g * 1.5f),
+                        Size(sz.width - 2 * bz + g * 3f, sz.height - 2 * bz + g * 3f), style = Stroke(g))
+                }
             } else {
-                // Rich star in the colour of the side it sits on; bright yellows get a deeper rim.
-                val bright = side.relativeLuminance() > 0.45
-                drawPath(star, if (bright) side.darken(0.06f) else side)
-                drawPath(star, side.darken(if (bright) 0.5f else 0.38f), style = Stroke(unit * 0.05f, join = StrokeJoin.Round))
+                val r = geo.yardRadius * unit
+                drawCircle(col, r, c)
+                drawCircle(theme.yardInner.copy(alpha = if (used) 1f else 0.7f), r * 0.82f, c)
+                if (active) drawCircle(Color.White.copy(alpha = 0.35f + 0.5f * pulse), r - unit * 0.1f, c, style = Stroke(unit * (0.1f + 0.08f * pulse)))
+            }
+            val baseR = unit * (if (cross) 0.5f * view.outer else 0.42f)
+            val base = seatColor(seat)
+            for (k in 0..3) {
+                val s = px(view.v(geo.yardSlot(seat, k)))
+                // A shallow coin in the pawn colour: a darker rim and a soft lit centre.
+                drawCircle(base, baseR, s)
+                drawCircle(Brush.radialGradient(0f to Color.White.copy(alpha = 0.14f), 0.55f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.22f),
+                    center = s - Offset(baseR * 0.15f, baseR * 0.2f), radius = baseR * 1.1f), baseR, s)
+                drawCircle(base.darken(0.3f), baseR * 0.8f, s, style = Stroke(unit * 0.04f))
             }
         }
-        if (lane == 0 && depth == 5) {
-            // Entry arrow: points from the tip into this seat's home stretch.
-            val d = -view.armDir(arm)
-            val n = Offset(-d.y, d.x)
-            val k = unit * view.tile
-            val tip = p + d * (k * 0.34f)
-            val back = p - d * (k * 0.22f)
-            val arrow = Path().apply {
-                moveTo(tip.x, tip.y)
-                lineTo(back.x + n.x * k * 0.28f, back.y + n.y * k * 0.28f)
-                lineTo(back.x - n.x * k * 0.28f, back.y - n.y * k * 0.28f); close()
+
+        // Centre: flat four- (or six-) colour triangles.
+        val poly = geo.centerPolygon().map(view::v)
+        val center = px(Offset.Zero)
+        for (seat in 0 until topo.seats) {
+            val a = px(poly[(seat - 1 + topo.seats) % topo.seats]); val b = px(poly[seat])
+            val path = Path().apply { moveTo(center.x, center.y); lineTo(a.x, a.y); lineTo(b.x, b.y); close() }
+            drawPath(path, seatColor(seat))
+        }
+
+        // Track: white tiles with thin grey grid lines; start squares and home lanes are solid colour.
+        fun tile(pt: Pt, arm: Int, fill: Color, lines: Boolean) {
+            if (cross) {
+                val r = view.tileRect(pt)
+                val tl = px(r.topLeft); val sz = Size(r.width * unit, r.height * unit)
+                drawRect(fill, tl, sz)
+                if (lines) drawRect(theme.grid, tl, sz, style = Stroke(gridW))
+            } else {
+                val p = px(view.v(pt)); val cs = unit
+                rotate(view.armDeg(arm), p) {
+                    val tl = p - Offset(cs / 2, cs / 2)
+                    drawRect(fill, tl, Size(cs, cs))
+                    if (lines) drawRect(theme.grid, tl, Size(cs, cs), style = Stroke(gridW))
+                }
             }
-            drawPath(arrow, side)
-            drawPath(arrow, side.darken(0.4f), style = Stroke(unit * 0.035f, join = StrokeJoin.Round))
+        }
+        val starts = (0 until topo.seats).associateBy { topo.startCell(it) }
+        for (c in 0 until topo.trackLength) if (c !in starts) tile(geo.trackCell(c), geo.laneDepthOf(c).first, theme.cell, lines = true)
+        for ((c, seat) in starts) tile(geo.trackCell(c), geo.laneDepthOf(c).first, seatColor(seat), lines = false)
+        for (seat in 0 until topo.seats) for (i in 0..4) tile(geo.stretchCell(seat, i), seat, seatColor(seat), lines = false)
+
+        val k = unit * view.tile
+        for (c in 0 until topo.trackLength) {
+            val (arm, lane, depth) = geo.laneDepthOf(c)
+            val p = px(view.v(geo.trackCell(c)))
+            if (topo.isSafeCell(c) && c !in starts) {
+                // Outlined white star on each star square.
+                val star = starPath(p, k * 0.38f)
+                drawPath(star, Color.White)
+                drawPath(star, theme.grid.darken(0.25f), style = Stroke(maxOf(k * 0.035f, 1f), join = StrokeJoin.Round))
+            }
+            if (lane == 0 && depth == 5) {
+                // Thin entry arrow in the seat's colour, pointing from the tip into its home lane.
+                val d = -view.armDir(arm)
+                val n = Offset(-d.y, d.x)
+                val head = p + d * (k * 0.26f)
+                val tail = p - d * (k * 0.26f)
+                val col = seatColor(arm)
+                val sw = maxOf(k * 0.055f, 1.2f)
+                drawLine(col, tail, head, sw, StrokeCap.Round)
+                val wing = d * (k * 0.15f)
+                drawLine(col, head, head - wing + n * (k * 0.13f), sw, StrokeCap.Round)
+                drawLine(col, head, head - wing - n * (k * 0.13f), sw, StrokeCap.Round)
+            }
         }
     }
-    for (seat in 0 until topo.seats) for (i in 0..4) cell(geo.stretchCell(seat, i), seat, seatColor(seat))
+    // Thin outline around the slab.
+    drawPath(slab, theme.grid.darken(0.1f), style = Stroke(maxOf(unit * 0.04f, 1f)))
 }

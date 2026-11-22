@@ -108,7 +108,8 @@ class BoardGeometry(val topology: BoardTopology) {
 
     fun yardSlot(seat: Int, localIndex: Int): Pt {
         val c = yardCenter(seat)
-        val d = yardRadius * 0.5f
+        // Cross board: four bases on a 1.9-cell square inside the yard's white 4×4 box.
+        val d = if (seats == 4) 0.95f else yardRadius * 0.5f
         val off = when (localIndex) {
             0 -> Pt(-d, -d); 1 -> Pt(d, -d); 2 -> Pt(-d, d); else -> Pt(d, d)
         }

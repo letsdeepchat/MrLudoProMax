@@ -3,10 +3,9 @@ Ludo Sovereign: 100% offline Ludo + Snakes & Ladders. No ads, no purchases, no I
 **Install:** download the APK below on your Android phone (Android 8.0+), open it, and allow "install unknown apps" for your browser or file manager when asked. If an earlier test build is installed and the install fails, uninstall it first (test builds are signed with different debug keys).
 
 What's new in this version:
-- **Bigger road tiles:** the board runs edge to edge and the three centre lanes are 30% wider than a yard column, with slimmer yard bezels
-- **Bigger pawns** with a thick white outline, glossy 3D body, curved highlight and a grounded shadow, readable on white and coloured tiles
+- **Classic board look:** bright solid yards with white inner boxes, a plain white track with thin grid lines, coloured start squares and home lanes, outlined stars, small coloured entry arrows and a four-colour centre, running edge to edge
+- **Tall glossy pin pawns:** a white shell holding a glossy ball in the player's colour, standing on a coloured base ring; movable pawns get a spinning dashed ring
 - **Finished pawns** stay large in their Home triangle, and a green ✓ pops into the player's yard slot for each one
-- **Player-coloured safe stars** on each side of the board
 - **Brighter menus:** sky-to-royal blue backdrop, white 3D game cards that press down, high-contrast pills, a clean Quick Resume card with a golden Resume button; every theme's menu colours are contrast-checked
 - **Juicier moves:** squash-and-stretch on every landing, a ring on each tile landed, a sharper capture burst, confetti at Home, and press feedback on dice, pawns and buttons
 

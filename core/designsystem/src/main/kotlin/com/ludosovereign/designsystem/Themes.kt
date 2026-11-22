@@ -74,6 +74,12 @@ data class BoardTheme(
     /** Subtle geometric pattern on the backdrop. */
     val patterned: Boolean = false,
     val ui: UiPalette,
+    /** Thin grid lines between track tiles. */
+    val grid: Color = cellBorder,
+    /** Yard fills by colour index, when a theme wants yards in a different shade than lanes and pawns. */
+    val yardTokens: List<Color>? = null,
+    /** Rotating ring under pawns that can move. */
+    val selectRing: Color = accent,
 )
 
 object BoardThemes {
@@ -98,13 +104,17 @@ object BoardThemes {
         Color(pill), Color(onPill), Color(pillBorder), cta.first, cta.second, cta.third, Color(primary), Color(onPrimary),
     )
 
-    /** Default: cheerful sky-to-royal azure backdrop, crisp white cards, white track, vivid yards. */
+    /**
+     * Default: cheerful sky-to-royal azure backdrop and crisp white cards around a classic board:
+     * solid red, green, mustard and sky-blue yards with white boxes, a white track with thin grey
+     * grid lines, solid coloured home lanes and start squares.
+     */
     val CLASSIC_ROYAL = BoardTheme(
         "classic_royal", "Classic Royal", false,
         background = Color(0xFF1C4FBF), surface = Color(0xFFFFFFFF), boardBase = Color(0xFFFFFFFF),
         cell = Color(0xFFFFFFFF), cellBorder = Color(0xFF1B1F2A), safeCell = Color(0xFFFFFFFF),
         center = Color(0xFFFFFFFF), accent = Color(0xFFFFC62F), onSurface = Color(0xFF14244F),
-        tokens = listOf(Color(0xFFE5322D), Color(0xFF22A447), Color(0xFFF7C51E), Color(0xFF1E6FE0), Color(0xFF8E3CCB), Color(0xFFF57C1F)),
+        tokens = listOf(Color(0xFFEE1D23), Color(0xFF00A148), Color(0xFFF9DC0E), Color(0xFF2AABF2), Color(0xFF8E3CCB), Color(0xFFF57C1F)),
         fortressMetal = listOf(Color(0xFFFFF1B8), Color(0xFFC9961A), Color(0xFFFFD54F), Color(0xFF8D6608)),
         yardInner = Color(0xFFFFFFFF), frame = Color(0xFF0B2A6B), patterned = true,
         ui = ui(0xFF2B6FE6, 0xFF1C4FBF, 0xFFFFFFFF,
@@ -112,6 +122,9 @@ object BoardThemes {
             0xFFE6EFFF, 0xFF14244F, 0xFFFFFFFF,
             Triple(Color(0xFFFFC62F), Color(0xFF3A2600), Color(0xFFB07800)),
             0xFF1E56C5, 0xFFFFFFFF),
+        grid = Color(0xFFA9ADB3),
+        yardTokens = listOf(Color(0xFFEE1D23), Color(0xFF00A148), Color(0xFFC2AB1C), Color(0xFF2AABF2), Color(0xFF8E3CCB), Color(0xFFF57C1F)),
+        selectRing = Color(0xFF8A2C2C),
     )
     val ROYAL_IVORY = BoardTheme(
         "royal_ivory", "Royal Ivory", false,
@@ -219,6 +232,10 @@ val LocalColorblind = staticCompositionLocalOf { false }
 
 fun BoardTheme.tokenColor(colorIndex: Int, colorblind: Boolean): Color =
     (if (colorblind) BoardThemes.COLORBLIND_TOKENS else tokens)[colorIndex.mod(6)]
+
+/** Yard fill for a colour index: the theme's yard shade, or the pawn colour. */
+fun BoardTheme.yardColor(colorIndex: Int, colorblind: Boolean): Color =
+    if (colorblind || yardTokens == null) tokenColor(colorIndex, colorblind) else yardTokens[colorIndex.mod(6)]
 
 /** WCAG relative luminance of an sRGB colour (alpha ignored). */
 fun Color.relativeLuminance(): Double {
