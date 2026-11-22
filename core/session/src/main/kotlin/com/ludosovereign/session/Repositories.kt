@@ -32,7 +32,14 @@ data class MatchResult(
     val stats: MatchStats?,
     val log: MatchLog?,
     val durationMillis: Long,
-)
+    /** Team id per player (each player is its own team unless Team Up). */
+    val teams: List<Int> = players.indices.toList(),
+    /** Bot tier name per player, null for humans. */
+    val botTiers: List<String?> = List(players.size) { null },
+) {
+    fun isWinner(player: Int): Boolean = teams.getOrNull(player) == winnerTeam
+    val opposedUnbeatable: Boolean get() = botTiers.any { it == "UNBEATABLE" }
+}
 
 /** Implemented by `:core:data` (Room). In-memory fakes are used in tests. */
 interface SaveRepository {

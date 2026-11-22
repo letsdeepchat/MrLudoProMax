@@ -271,6 +271,8 @@ class MatchSession(
             stats = stats,
             log = matchLog,
             durationMillis = clock() - startedAt,
+            teams = cfg.teams.toList(),
+            botTiers = cfg.players.map { it.botTier?.name },
         )
         _ui.update { it.copy(result = result, awaitingHuman = false, turnDeadlineAtMs = null) }
         onFinished(result)
