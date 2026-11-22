@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stats_title">आकडेवारी &amp; इतिहास</string>
+    <string name="back">मागे</string>
+    <string name="new_profile">नवीन प्रोफाइल</string>
+    <string name="games">सामने</string>
+    <string name="wins">विजय</string>
+    <string name="losses">पराभव</string>
+    <string name="captures">मारलेल्या सोंगट्या</string>
+    <string name="times_captured">मारले गेले</string>
+    <string name="fortresses">बांधलेले किल्ले</string>
+    <string name="tokens_home">घरी पोहोचलेल्या सोंगट्या</string>
+    <string name="snl_record">साप &amp; शिडी विजय</string>
+    <string name="achievements">कामगिरी</string>
+    <string name="history">सामना इतिहास</string>
+    <string name="won_by">%1$s जिंकले</string>
+    <string name="replay">रिप्ले</string>
+    <string name="replay_step">चाल %1$d / %2$d</string>
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stats_title">గణాంకాలు &amp; చరిత్ర</string>
+    <string name="back">వెనుకకు</string>
+    <string name="new_profile">కొత్త ప్రొఫైల్</string>
+    <string name="games">ఆటలు</string>
+    <string name="wins">విజయాలు</string>
+    <string name="losses">ఓటములు</string>
+    <string name="captures">కొట్టినవి</string>
+    <string name="times_captured">కొట్టబడినవి</string>
+    <string name="fortresses">కట్టిన కోటలు</string>
+    <string name="tokens_home">ఇంటికి చేరిన కాయలు</string>
+    <string name="snl_record">పాములు &amp; నిచ్చెనలు విజయాలు</string>
+    <string name="achievements">సాధనలు</string>
+    <string name="history">ఆట చరిత్ర</string>
+    <string name="won_by">%1$s గెలిచారు</string>
+    <string name="replay">రీప్లే</string>
+    <string name="replay_step">కదలిక %1$d / %2$d</string>
+</resources>

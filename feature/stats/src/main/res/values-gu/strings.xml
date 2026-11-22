@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stats_title">આંકડા &amp; ઇતિહાસ</string>
+    <string name="back">પાછળ</string>
+    <string name="new_profile">નવી પ્રોફાઇલ</string>
+    <string name="games">મેચો</string>
+    <string name="wins">જીત</string>
+    <string name="losses">હાર</string>
+    <string name="captures">કરેલા કાપ</string>
+    <string name="times_captured">કપાયા</string>
+    <string name="fortresses">બાંધેલા કિલ્લા</string>
+    <string name="tokens_home">ઘરે પહોંચેલી સોગઠીઓ</string>
+    <string name="snl_record">સાપ &amp; સીડી જીત</string>
+    <string name="achievements">સિદ્ધિઓ</string>
+    <string name="history">મેચ ઇતિહાસ</string>
+    <string name="won_by">%1$s જીત્યા</string>
+    <string name="replay">રીપ્લે</string>
+    <string name="replay_step">ચાલ %1$d / %2$d</string>
+</resources>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings">ക്രമീകരണങ്ങൾ</string>
+    <string name="quick_resume">വേഗം തുടരുക</string>
+    <string name="resume">തുടരുക</string>
+    <string name="play_ludo">ലൂഡോ കളിക്കുക</string>
+    <string name="play_ludo_sub">കമ്പ്യൂട്ടറിനെതിരെ അല്ലെങ്കിൽ പാസ് &amp; പ്ലേ · ക്ലാസിക്, ക്വിക്ക്, റഷ്, ടീം അപ്പ്</string>
+    <string name="play_snakes">പാമ്പും ഏണിയും</string>
+    <string name="play_snakes_sub">7 ബോർഡുകൾ · 2–6 കളിക്കാർ</string>
+    <string name="stats">സ്ഥിതിവിവരം &amp; ചരിത്രം</string>
+    <string name="audio_studio">ഓഡിയോ സ്റ്റുഡിയോ</string>
+    <string name="saved_games">സേവ് ചെയ്ത കളികൾ</string>
+    <string name="slot_n">സ്ലോട്ട് %1$d</string>
+    <string name="delete">ഇല്ലാതാക്കുക</string>
+    <string name="offline_promise">പൂർണ്ണമായും ഓഫ്‌ലൈൻ. പരസ്യങ്ങളില്ല, വാങ്ങലുകളില്ല, എല്ലാം അൺലോക്ക്.</string>
+    <string name="done">കഴിഞ്ഞു</string>
+    <string name="theme">തീം</string>
+    <string name="colorblind">വർണ്ണാന്ധതാ-സുരക്ഷിത കരുക്കൾ</string>
+    <string name="colorblind_desc">Okabe–Ito നിറങ്ങൾ; ഓരോ കരുവിലും ഒരു ആകൃതിയും ഉണ്ട്.</string>
+    <string name="gameplay">കളി</string>
+    <string name="auto_move">ഓട്ടോ-മൂവ്</string>
+    <string name="auto_move_desc">ഒരു സാധുവായ നീക്കം മാത്രമുള്ളപ്പോൾ സ്വയം കളിക്കും.</string>
+    <string name="animation_speed">ആനിമേഷൻ വേഗത</string>
+    <string name="language">ഭാഷ</string>
+</resources>

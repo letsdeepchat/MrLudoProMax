@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings">सेटिंग्ज</string>
+    <string name="quick_resume">झटपट पुढे सुरू</string>
+    <string name="resume">पुढे सुरू करा</string>
+    <string name="play_ludo">लुडो खेळा</string>
+    <string name="play_ludo_sub">संगणकाविरुद्ध किंवा पास &amp; प्ले · क्लासिक, क्विक, रश, टीम अप</string>
+    <string name="play_snakes">साप &amp; शिडी</string>
+    <string name="play_snakes_sub">7 बोर्ड · 2–6 खेळाडू</string>
+    <string name="stats">आकडेवारी &amp; इतिहास</string>
+    <string name="audio_studio">ऑडिओ स्टुडिओ</string>
+    <string name="saved_games">जतन केलेले खेळ</string>
+    <string name="slot_n">स्लॉट %1$d</string>
+    <string name="delete">हटवा</string>
+    <string name="offline_promise">पूर्णपणे ऑफलाइन. जाहिराती नाहीत, खरेदी नाही, सर्व काही अनलॉक.</string>
+    <string name="done">झाले</string>
+    <string name="theme">थीम</string>
+    <string name="colorblind">रंगांधळेपणासाठी सुरक्षित सोंगट्या</string>
+    <string name="colorblind_desc">Okabe–Ito रंगसंच; प्रत्येक सोंगटीवर एक आकारही असतो.</string>
+    <string name="gameplay">खेळ</string>
+    <string name="auto_move">ऑटो-मूव्ह</string>
+    <string name="auto_move_desc">फक्त एकच वैध चाल असल्यास ती आपोआप खेळली जाते.</string>
+    <string name="animation_speed">ॲनिमेशन वेग</string>
+    <string name="language">भाषा</string>
+</resources>

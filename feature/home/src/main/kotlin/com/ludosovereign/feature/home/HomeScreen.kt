@@ -186,5 +186,6 @@ fun SettingsScreen(
  * is a drop-in: add `values-<tag>/strings.xml` to each module and list the tag here.
  */
 val LANGUAGES = listOf(
-    "" to "System", "en" to "English", "hi" to "हिन्दी", "es" to "Español", "fr" to "Français", "ar" to "العربية",
+    "" to "System", "en" to "English", "hi" to "हिन्दी", "ta" to "தமிழ்", "te" to "తెలుగు", "kn" to "ಕನ್ನಡ",
+    "mr" to "मराठी", "gu" to "ગુજરાતી", "bn" to "বাংলা", "ml" to "മലയാളം", "es" to "Español", "ar" to "العربية", "fr" to "Français",
 )

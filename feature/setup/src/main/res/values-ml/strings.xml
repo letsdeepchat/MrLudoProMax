@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_title">പുതിയ മത്സരം</string>
+    <string name="back">തിരികെ</string>
+    <string name="game">കളി</string>
+    <string name="board_and_variant">ബോർഡ് &amp; തരം</string>
+    <string name="layout">ബോർഡ് ലേഔട്ട്</string>
+    <string name="players">കളിക്കാർ</string>
+    <string name="player_n">കളിക്കാരൻ %1$d</string>
+    <string name="player_name">കളിക്കാരൻ</string>
+    <string name="bot_name">ബോട്ട്</string>
+    <string name="rules">നിയമങ്ങൾ</string>
+    <string name="theme">തീം</string>
+    <string name="tokens_to_win">ആദ്യം %1$d എണ്ണം വീട്ടിലെത്തിക്കുന്നയാൾ</string>
+    <string name="turn_timer">10-സെക്കൻഡ് ടേൺ ടൈമർ</string>
+    <string name="team_up_hint">എതിർ മൂലകൾ ടീമംഗങ്ങളാണ്. ടീമംഗങ്ങൾ പരസ്പരം വെട്ടില്ല, കളം പങ്കിടാം, കളി തീർത്തയാൾ പങ്കാളിക്കായി എറിയും.</string>
+    <string name="team_up_invalid">ടീം അപ്പിന് 4 കളിക്കാർ (2v2) അല്ലെങ്കിൽ ഹെക്സ് ബോർഡിൽ 6 കളിക്കാർ (3v3) വേണം.</string>
+    <string name="exact_finish">പൂർത്തിയാക്കാൻ കൃത്യ സംഖ്യ</string>
+    <string name="variant_classic">ക്ലാസിക്</string>
+    <string name="variant_quick">ക്വിക്ക്</string>
+    <string name="variant_rush">റഷ്</string>
+    <string name="variant_team">ടീം അപ്പ്</string>
+    <string name="rule_fortress">ഇരട്ട-കരു കോട്ട</string>
+    <string name="rule_fortress_desc">ഒരേ കളത്തിലുള്ള നിങ്ങളുടെ രണ്ടോ അതിലധികമോ കരുക്കളെ വെട്ടാനാവില്ല.</string>
+    <string name="rule_triple_six">മൂന്ന് ആറുകൾ ടേൺ നഷ്ടപ്പെടുത്തും</string>
+    <string name="rule_all_places">എല്ലാ സ്ഥാനങ്ങൾക്കും കളി തുടരുക</string>
+    <string name="rule_undo">പഴയപടിയാക്കാൻ അനുവദിക്കുക</string>
+    <string name="rule_undo_desc">മനുഷ്യർ മാത്രമുള്ള പാസ് &amp; പ്ലേ.</string>
+    <string name="unbeatable_warning">ന്യായമായ പകിടയല്ല: ഈ ബോട്ട് സ്വന്തം സംഖ്യ സ്വയം തിരഞ്ഞെടുക്കും.</string>
+    <string name="start_match">മത്സരം ആരംഭിക്കുക</string>
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stats_title">സ്ഥിതിവിവരം &amp; ചരിത്രം</string>
+    <string name="back">തിരികെ</string>
+    <string name="new_profile">പുതിയ പ്രൊഫൈൽ</string>
+    <string name="games">മത്സരങ്ങൾ</string>
+    <string name="wins">ജയങ്ങൾ</string>
+    <string name="losses">തോൽവികൾ</string>
+    <string name="captures">നടത്തിയ വെട്ടുകൾ</string>
+    <string name="times_captured">വെട്ടേറ്റത്</string>
+    <string name="fortresses">നിർമ്മിച്ച കോട്ടകൾ</string>
+    <string name="tokens_home">വീട്ടിലെത്തിയ കരുക്കൾ</string>
+    <string name="snl_record">പാമ്പും ഏണിയും ജയങ്ങൾ</string>
+    <string name="achievements">നേട്ടങ്ങൾ</string>
+    <string name="history">മത്സര ചരിത്രം</string>
+    <string name="won_by">%1$s ജയിച്ചു</string>
+    <string name="replay">റീപ്ലേ</string>
+    <string name="replay_step">നീക്കം %1$d / %2$d</string>
+</resources>

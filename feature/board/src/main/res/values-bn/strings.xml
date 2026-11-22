@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="back">পিছনে</string>
+    <string name="undo">শেষ চাল আনডু করুন</string>
+    <string name="menu">মেনু</string>
+    <string name="save_to_slot">স্লট %1$d-এ সংরক্ষণ</string>
+    <string name="saved_to_slot">স্লট %1$d-এ সংরক্ষিত</string>
+    <string name="game_over">খেলা শেষ</string>
+    <string name="bot_thinking">ভাবছে…</string>
+    <string name="tap_dice">দান চালতে ছক্কায় ট্যাপ করুন</string>
+    <string name="pick_token">জ্বলজ্বলে ঘুঁটি বাছুন</string>
+    <string name="dice">ছক্কা</string>
+    <string name="winner">%1$s জিতেছে!</string>
+    <string name="done">সম্পন্ন</string>
+    <string name="captures_short">%1$dটি কাটা</string>
+    <string name="fortresses_short">%1$dটি দুর্গ</string>
+</resources>

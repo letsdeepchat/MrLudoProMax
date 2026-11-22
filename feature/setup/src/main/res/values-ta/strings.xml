@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_title">புதிய ஆட்டம்</string>
+    <string name="back">பின்செல்</string>
+    <string name="game">ஆட்டம்</string>
+    <string name="board_and_variant">பலகை &amp; வகை</string>
+    <string name="layout">பலகை அமைப்பு</string>
+    <string name="players">வீரர்கள்</string>
+    <string name="player_n">வீரர் %1$d</string>
+    <string name="player_name">வீரர்</string>
+    <string name="bot_name">பாட்</string>
+    <string name="rules">விதிகள்</string>
+    <string name="theme">தீம்</string>
+    <string name="tokens_to_win">முதலில் %1$d வீடு சேர்ப்பவர்</string>
+    <string name="turn_timer">10-வினாடி முறை டைமர்</string>
+    <string name="team_up_hint">எதிர் மூலைகள் அணியினர். அணியினர் ஒருவரை ஒருவர் வெட்ட மாட்டார்கள், கட்டத்தைப் பகிரலாம், முடித்த வீரர் தன் துணைக்காக உருட்டுவார்.</string>
+    <string name="team_up_invalid">அணி முறைக்கு 4 வீரர்கள் (2v2) அல்லது ஹெக்ஸ் பலகையில் 6 வீரர்கள் (3v3) தேவை.</string>
+    <string name="exact_finish">முடிக்கச் சரியான எண் தேவை</string>
+    <string name="variant_classic">கிளாசிக்</string>
+    <string name="variant_quick">விரைவு</string>
+    <string name="variant_rush">ரஷ்</string>
+    <string name="variant_team">அணி</string>
+    <string name="rule_fortress">இரட்டைக் காய் கோட்டை</string>
+    <string name="rule_fortress_desc">ஒரே கட்டத்தில் உங்கள் இரண்டு அல்லது அதற்கு மேற்பட்ட காய்களை வெட்ட முடியாது.</string>
+    <string name="rule_triple_six">மூன்று ஆறுகள் முறையை இழக்கச் செய்யும்</string>
+    <string name="rule_all_places">எல்லா இடங்களுக்கும் தொடர்ந்து விளையாடு</string>
+    <string name="rule_undo">செயல்தவிர்க்க அனுமதி</string>
+    <string name="rule_undo_desc">மனிதர்கள் மட்டும் உள்ள பாஸ் &amp; ப்ளே.</string>
+    <string name="unbeatable_warning">நியாயமான பகடை அல்ல: இந்த பாட் தன் எண்ணைத் தானே தேர்ந்தெடுக்கும்.</string>
+    <string name="start_match">ஆட்டத்தைத் தொடங்கு</string>
+</resources>

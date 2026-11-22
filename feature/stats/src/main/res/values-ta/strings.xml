@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stats_title">புள்ளிவிவரம் &amp; வரலாறு</string>
+    <string name="back">பின்செல்</string>
+    <string name="new_profile">புதிய சுயவிவரம்</string>
+    <string name="games">ஆட்டங்கள்</string>
+    <string name="wins">வெற்றிகள்</string>
+    <string name="losses">தோல்விகள்</string>
+    <string name="captures">செய்த வெட்டுகள்</string>
+    <string name="times_captured">வெட்டப்பட்டது</string>
+    <string name="fortresses">கட்டிய கோட்டைகள்</string>
+    <string name="tokens_home">வீடு சேர்ந்த காய்கள்</string>
+    <string name="snl_record">பாம்பும் ஏணியும் வெற்றிகள்</string>
+    <string name="achievements">சாதனைகள்</string>
+    <string name="history">ஆட்ட வரலாறு</string>
+    <string name="won_by">%1$s வென்றார்</string>
+    <string name="replay">மீண்டும் பார்</string>
+    <string name="replay_step">நகர்வு %1$d / %2$d</string>
+</resources>

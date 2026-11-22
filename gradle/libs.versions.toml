@@ -13,6 +13,8 @@ room = "2.6.1"
 datastore = "1.1.1"
 coreKtx = "1.15.0"
 profileinstaller = "1.4.1"
+robolectric = "4.14.1"
+androidxTestCore = "1.6.1"
 
 [libraries]
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
@@ -43,6 +45,10 @@ compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 compose-foundation = { module = "androidx.compose.foundation:foundation" }
 compose-material3 = { module = "androidx.compose.material3:material3" }
 compose-material-icons-core = { module = "androidx.compose.material:material-icons-core" }
+compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
+compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+androidx-test-core = { module = "androidx.test:core-ktx", version.ref = "androidxTestCore" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

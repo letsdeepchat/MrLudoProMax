@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_title">নতুন ম্যাচ</string>
+    <string name="back">পিছনে</string>
+    <string name="game">খেলা</string>
+    <string name="board_and_variant">বোর্ড &amp; ধরন</string>
+    <string name="layout">বোর্ড বিন্যাস</string>
+    <string name="players">খেলোয়াড়</string>
+    <string name="player_n">খেলোয়াড় %1$d</string>
+    <string name="player_name">খেলোয়াড়</string>
+    <string name="bot_name">বট</string>
+    <string name="rules">নিয়ম</string>
+    <string name="theme">থিম</string>
+    <string name="tokens_to_win">প্রথমে %1$dটি ঘরে পৌঁছালে জয়</string>
+    <string name="turn_timer">10-সেকেন্ডের টার্ন টাইমার</string>
+    <string name="team_up_hint">বিপরীত কোণগুলি সতীর্থ। সতীর্থরা একে অপরকে কাটে না, ঘর ভাগ করতে পারে, আর শেষ করা খেলোয়াড় সঙ্গীর জন্য দান চালে।</string>
+    <string name="team_up_invalid">টিম আপের জন্য 4 জন (2v2) বা হেক্স বোর্ডে 6 জন (3v3) খেলোয়াড় দরকার।</string>
+    <string name="exact_finish">শেষ করতে ঠিক সংখ্যা লাগবে</string>
+    <string name="variant_classic">ক্লাসিক</string>
+    <string name="variant_quick">কুইক</string>
+    <string name="variant_rush">রাশ</string>
+    <string name="variant_team">টিম আপ</string>
+    <string name="rule_fortress">জোড়া-ঘুঁটি দুর্গ</string>
+    <string name="rule_fortress_desc">একই ঘরে আপনার দুই বা ততোধিক ঘুঁটি কাটা যায় না।</string>
+    <string name="rule_triple_six">তিনটি ছক্কায় টার্ন বাতিল</string>
+    <string name="rule_all_places">সব স্থানের জন্য খেলা চালিয়ে যান</string>
+    <string name="rule_undo">আনডু করার অনুমতি</string>
+    <string name="rule_undo_desc">শুধু মানুষদের পাস &amp; প্লে।</string>
+    <string name="unbeatable_warning">ন্যায্য ছক্কা নয়: এই বট নিজের দান নিজেই বেছে নেয়।</string>
+    <string name="start_match">ম্যাচ শুরু করুন</string>
+</resources>

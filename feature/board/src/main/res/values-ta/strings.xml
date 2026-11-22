@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="back">பின்செல்</string>
+    <string name="undo">கடைசி நகர்வைச் செயல்தவிர்</string>
+    <string name="menu">மெனு</string>
+    <string name="save_to_slot">இடம் %1$d-இல் சேமி</string>
+    <string name="saved_to_slot">இடம் %1$d-இல் சேமிக்கப்பட்டது</string>
+    <string name="game_over">ஆட்டம் முடிந்தது</string>
+    <string name="bot_thinking">யோசிக்கிறது…</string>
+    <string name="tap_dice">உருட்ட பகடையைத் தட்டவும்</string>
+    <string name="pick_token">ஒளிரும் காயைத் தேர்ந்தெடு</string>
+    <string name="dice">பகடை</string>
+    <string name="winner">%1$s வென்றார்!</string>
+    <string name="done">முடிந்தது</string>
+    <string name="captures_short">%1$d வெட்டுகள்</string>
+    <string name="fortresses_short">%1$d கோட்டைகள்</string>
+</resources>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings">সেটিংস</string>
+    <string name="quick_resume">দ্রুত আবার শুরু</string>
+    <string name="resume">আবার শুরু</string>
+    <string name="play_ludo">লুডো খেলুন</string>
+    <string name="play_ludo_sub">কম্পিউটারের বিরুদ্ধে বা পাস &amp; প্লে · ক্লাসিক, কুইক, রাশ, টিম আপ</string>
+    <string name="play_snakes">সাপ &amp; মই</string>
+    <string name="play_snakes_sub">7টি বোর্ড · 2–6 জন খেলোয়াড়</string>
+    <string name="stats">পরিসংখ্যান &amp; ইতিহাস</string>
+    <string name="audio_studio">অডিও স্টুডিও</string>
+    <string name="saved_games">সংরক্ষিত খেলা</string>
+    <string name="slot_n">স্লট %1$d</string>
+    <string name="delete">মুছুন</string>
+    <string name="offline_promise">সম্পূর্ণ অফলাইন। বিজ্ঞাপন নেই, কেনাকাটা নেই, সবকিছু আনলক।</string>
+    <string name="done">সম্পন্ন</string>
+    <string name="theme">থিম</string>
+    <string name="colorblind">বর্ণান্ধ-নিরাপদ ঘুঁটি</string>
+    <string name="colorblind_desc">Okabe–Ito রঙ; প্রতিটি ঘুঁটিতে একটি আকৃতিও থাকে।</string>
+    <string name="gameplay">গেমপ্লে</string>
+    <string name="auto_move">অটো-মুভ</string>
+    <string name="auto_move_desc">শুধু একটি বৈধ চাল থাকলে স্বয়ংক্রিয়ভাবে খেলে।</string>
+    <string name="animation_speed">অ্যানিমেশন গতি</string>
+    <string name="language">ভাষা</string>
+</resources>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_title">ಹೊಸ ಆಟ</string>
+    <string name="back">ಹಿಂದೆ</string>
+    <string name="game">ಆಟ</string>
+    <string name="board_and_variant">ಬೋರ್ಡ್ &amp; ಪ್ರಕಾರ</string>
+    <string name="layout">ಬೋರ್ಡ್ ವಿನ್ಯಾಸ</string>
+    <string name="players">ಆಟಗಾರರು</string>
+    <string name="player_n">ಆಟಗಾರ %1$d</string>
+    <string name="player_name">ಆಟಗಾರ</string>
+    <string name="bot_name">ಬಾಟ್</string>
+    <string name="rules">ನಿಯಮಗಳು</string>
+    <string name="theme">ಥೀಮ್</string>
+    <string name="tokens_to_win">ಮೊದಲು %1$d ಮನೆಗೆ ತಲುಪಿಸಿದವರು</string>
+    <string name="turn_timer">10-ಸೆಕೆಂಡ್ ಸರದಿ ಟೈಮರ್</string>
+    <string name="team_up_hint">ಎದುರು ಮೂಲೆಗಳು ಸಹಚರರು. ಸಹಚರರು ಪರಸ್ಪರ ಕತ್ತರಿಸುವುದಿಲ್ಲ, ಚೌಕ ಹಂಚಿಕೊಳ್ಳಬಹುದು, ಮುಗಿಸಿದ ಆಟಗಾರ ಸಂಗಾತಿಗಾಗಿ ಉರುಳಿಸುತ್ತಾನೆ.</string>
+    <string name="team_up_invalid">ಟೀಮ್ ಅಪ್‌ಗೆ 4 ಆಟಗಾರರು (2v2) ಅಥವಾ ಹೆಕ್ಸ್ ಬೋರ್ಡ್‌ನಲ್ಲಿ 6 ಆಟಗಾರರು (3v3) ಬೇಕು.</string>
+    <string name="exact_finish">ಮುಗಿಸಲು ನಿಖರ ಸಂಖ್ಯೆ</string>
+    <string name="variant_classic">ಕ್ಲಾಸಿಕ್</string>
+    <string name="variant_quick">ಕ್ವಿಕ್</string>
+    <string name="variant_rush">ರಶ್</string>
+    <string name="variant_team">ಟೀಮ್ ಅಪ್</string>
+    <string name="rule_fortress">ಎರಡು-ಕಾಯಿ ಕೋಟೆ</string>
+    <string name="rule_fortress_desc">ಒಂದೇ ಚೌಕದಲ್ಲಿರುವ ನಿಮ್ಮ ಎರಡು ಅಥವಾ ಹೆಚ್ಚು ಕಾಯಿಗಳನ್ನು ಕತ್ತರಿಸಲಾಗದು.</string>
+    <string name="rule_triple_six">ಮೂರು ಆರುಗಳು ಸರದಿಯನ್ನು ಕಳೆಯುತ್ತವೆ</string>
+    <string name="rule_all_places">ಎಲ್ಲಾ ಸ್ಥಾನಗಳಿಗೆ ಆಟ ಮುಂದುವರಿಸಿ</string>
+    <string name="rule_undo">ರದ್ದುಗೊಳಿಸಲು ಅನುಮತಿಸಿ</string>
+    <string name="rule_undo_desc">ಮನುಷ್ಯರು ಮಾತ್ರ ಇರುವ ಪಾಸ್ &amp; ಪ್ಲೇ.</string>
+    <string name="unbeatable_warning">ನ್ಯಾಯಯುತ ದಾಳ ಅಲ್ಲ: ಈ ಬಾಟ್ ತನ್ನ ಸಂಖ್ಯೆಯನ್ನು ತಾನೇ ಆರಿಸುತ್ತದೆ.</string>
+    <string name="start_match">ಆಟ ಪ್ರಾರಂಭಿಸಿ</string>
+</resources>

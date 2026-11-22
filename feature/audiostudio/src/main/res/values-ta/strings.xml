@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_studio">ஒலி ஸ்டுடியோ</string>
+    <string name="back">பின்செல்</string>
+    <string name="sound_pack">ஒலித் தொகுப்பு</string>
+    <string name="volume">ஒலியளவு</string>
+    <string name="master">முதன்மை</string>
+    <string name="effects">ஆட்ட ஒலிகள்</string>
+    <string name="jingles">வெற்றி &amp; தோல்வி இசை</string>
+    <string name="interface_sounds">இடைமுகம்</string>
+    <string name="haptics">அதிர்வு</string>
+    <string name="haptics_on">அதிர்வுப் பின்னூட்டம்</string>
+    <string name="haptic_strength">வலிமை</string>
+</resources>

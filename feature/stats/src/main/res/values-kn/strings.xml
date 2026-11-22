@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stats_title">ಅಂಕಿಅಂಶ &amp; ಇತಿಹಾಸ</string>
+    <string name="back">ಹಿಂದೆ</string>
+    <string name="new_profile">ಹೊಸ ಪ್ರೊಫೈಲ್</string>
+    <string name="games">ಆಟಗಳು</string>
+    <string name="wins">ಗೆಲುವುಗಳು</string>
+    <string name="losses">ಸೋಲುಗಳು</string>
+    <string name="captures">ಮಾಡಿದ ಕತ್ತರಿಕೆಗಳು</string>
+    <string name="times_captured">ಕತ್ತರಿಸಲ್ಪಟ್ಟದ್ದು</string>
+    <string name="fortresses">ಕಟ್ಟಿದ ಕೋಟೆಗಳು</string>
+    <string name="tokens_home">ಮನೆ ತಲುಪಿದ ಕಾಯಿಗಳು</string>
+    <string name="snl_record">ಹಾವು &amp; ಏಣಿ ಗೆಲುವುಗಳು</string>
+    <string name="achievements">ಸಾಧನೆಗಳು</string>
+    <string name="history">ಆಟದ ಇತಿಹಾಸ</string>
+    <string name="won_by">%1$s ಗೆದ್ದರು</string>
+    <string name="replay">ಮರುಪ್ರದರ್ಶನ</string>
+    <string name="replay_step">ಚಲನೆ %1$d / %2$d</string>
+</resources>
