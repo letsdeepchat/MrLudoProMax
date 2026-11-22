@@ -22,6 +22,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -32,15 +33,19 @@ data class SessionSettings(
     val autoMove: Boolean = true,
     /** Allow undoing the last human move (Casual Pass & Play). */
     val undoEnabled: Boolean = false,
-    /** Dice tumble length; bot computation runs concurrently and is hidden behind it. */
-    val rollAnimationMs: Long = 450,
-    /** Pause after a move so the token animation can finish before the next actor. */
+    /** Dice tumble length for Snakes & Ladders; Ludo uses [timings]. */
+    val rollAnimationMs: Long = 380,
+    /** Snakes & Ladders move pause; Ludo uses [timings]. */
     val moveAnimationMs: Long = 350,
     /** Rush mode halves the animation timings. */
     val fastAnimations: Boolean = false,
+    /** User animation speed: 1 = normal, 2 = twice as fast. */
+    val animationSpeed: Float = 1f,
 ) {
     val rollMs get() = if (fastAnimations) rollAnimationMs / 2 else rollAnimationMs
     val moveMs get() = if (fastAnimations) moveAnimationMs / 2 else moveAnimationMs
+    val timings: AnimationTimings
+        get() = AnimationTimings().scaled((if (fastAnimations) 0.6f else 1f) / animationSpeed.coerceIn(0.25f, 4f))
 }
 
 data class LudoUiState(
@@ -55,6 +60,12 @@ data class LudoUiState(
     val canUndo: Boolean = false,
     /** Wall-clock deadline of the Rush turn timer, or null. */
     val turnDeadlineAtMs: Long? = null,
+    /** Where the current turn is in the roll → select → animate cycle; the UI gates input on it. */
+    val turnPhase: TurnPhase = TurnPhase.NEXT_TURN,
+    /** Animation lengths the board must use so it finishes inside the session's wait. */
+    val timings: AnimationTimings = AnimationTimings(),
+    /** True while the match is paused from the in-game menu. */
+    val paused: Boolean = false,
     val stats: MatchStats,
     val result: MatchResult? = null,
 )
@@ -99,42 +110,70 @@ class MatchSession(
     fun start(scope: CoroutineScope): Job = scope.launch { runLoop() }.also { job = it }
     fun stop() { job?.cancel() }
 
-    fun roll() { intents.trySend(Intent.Roll) }
-    fun move(tokenId: Int) { intents.trySend(Intent.Move(tokenId)) }
-    fun undo() { intents.trySend(Intent.Undo) }
+    /** Accepted only while the session is waiting for that exact input; taps at any other time are dropped. */
+    fun roll() { if (acceptsHuman(TurnPhase.WAITING_FOR_ROLL)) intents.trySend(Intent.Roll) }
+    fun move(tokenId: Int) { if (acceptsHuman(TurnPhase.SELECTING_TOKEN)) intents.trySend(Intent.Move(tokenId)) }
+    fun undo() { if (_ui.value.awaitingHuman) intents.trySend(Intent.Undo) }
+    fun setPaused(value: Boolean) { pausedFlow.value = value; _ui.update { it.copy(paused = value) } }
+
+    private fun acceptsHuman(phase: TurnPhase): Boolean = _ui.value.let { it.awaitingHuman && it.turnPhase == phase && !it.paused }
+
+    private val pausedFlow = MutableStateFlow(false)
+    private suspend fun awaitUnpaused() { pausedFlow.first { !it } }
+    private val t: AnimationTimings get() = settings.timings
 
     private fun isBot(player: Int) = game.config.players[player].kind == PlayerKind.BOT && bots.containsKey(player)
 
+    private fun setPhase(phase: TurnPhase, awaitingHuman: Boolean = false) =
+        _ui.update { it.copy(turnPhase = phase, awaitingHuman = awaitingHuman, timings = t) }
+
+    /** Drops taps that arrived while we were not waiting (double taps, taps during animations). */
+    private fun drainIntents() { while (intents.tryReceive().isSuccess) Unit }
+
     private suspend fun runLoop() {
-        publish(emptyList())
+        publish(emptyList(), TurnPhase.NEXT_TURN)
         while (game.phase != Phase.GAME_OVER) {
+            awaitUnpaused()
             if (isBot(game.current)) botStep(bots.getValue(game.current)) else humanStep()
         }
         finish()
+    }
+
+    /** Applies a move and holds the turn until the board's hop / capture / home animation has finished. */
+    private suspend fun applyMove(tokenId: Int) {
+        val events = apply(GameAction.MoveToken(tokenId), TurnPhase.ANIMATING_TOKEN)
+        delay(t.moveDuration(events))
+        if (game.phase != Phase.GAME_OVER) setPhase(TurnPhase.NEXT_TURN)
+    }
+
+    /** Tumbles the dice for [rollMs], applies the roll, then holds on the settled face. */
+    private suspend fun rollDice(player: Int, value: suspend () -> Int) {
+        _ui.update {
+            it.copy(rollingPlayer = player, awaitingHuman = false, legalMoves = IntArray(0), turnDeadlineAtMs = null,
+                turnPhase = TurnPhase.ROLLING_DICE, timings = t)
+        }
+        val v = coroutineScope {
+            val pick = async { value() }
+            delay(t.rollMs)
+            pick.await()
+        }
+        val events = apply(GameAction.Roll(v), TurnPhase.NEXT_TURN)
+        delay(t.settleMs)
+        if (game.phase != Phase.AWAITING_MOVE) delay(t.turnGapMs + if (events.any { it is GameEvent.TripleSixForfeit }) t.impactMs * 3 else 0)
     }
 
     private suspend fun botStep(bot: LudoBot) {
         val player = game.current
         when (game.phase) {
             Phase.AWAITING_ROLL -> {
-                _ui.update { it.copy(rollingPlayer = player, awaitingHuman = false, legalMoves = IntArray(0), turnDeadlineAtMs = null) }
                 val snapshot = game
-                val value = coroutineScope {
-                    val pick = async(aiDispatcher) { bot.chooseDice(snapshot) }
-                    delay(settings.rollMs)
-                    pick.await() ?: dice.roll()
-                }
-                apply(GameAction.Roll(value))
+                rollDice(player) { withContext(aiDispatcher) { bot.chooseDice(snapshot) } ?: dice.roll() }
             }
             Phase.AWAITING_MOVE -> {
                 val snapshot = game
-                val token = coroutineScope {
-                    val pick = async(aiDispatcher) { bot.chooseMove(snapshot) }
-                    delay(settings.moveMs / 2)
-                    pick.await()
-                }
-                apply(GameAction.MoveToken(token))
-                delay(settings.moveMs)
+                val token = withContext(aiDispatcher) { bot.chooseMove(snapshot) }
+                awaitUnpaused()
+                applyMove(token)
             }
             Phase.GAME_OVER -> Unit
         }
@@ -145,45 +184,51 @@ class MatchSession(
         when (game.phase) {
             Phase.AWAITING_ROLL -> {
                 val deadline = if (timerMs > 0) clock() + timerMs else null
+                drainIntents()
                 _ui.update {
                     it.copy(awaitingHuman = true, rollingPlayer = -1, legalMoves = IntArray(0),
-                        canUndo = undoPoint != null, turnDeadlineAtMs = deadline)
+                        canUndo = undoPoint != null, turnDeadlineAtMs = deadline, turnPhase = TurnPhase.WAITING_FOR_ROLL, timings = t)
                 }
-                when (val intent = awaitIntent(timerMs)) {
+                when (awaitIntent(timerMs)) {
                     Intent.Undo -> { performUndo(); return }
                     is Intent.Move -> return // not expecting a move; ignore
                     Intent.Roll, null -> {
+                        awaitUnpaused()
                         undoPoint = null
-                        _ui.update { it.copy(rollingPlayer = game.current, awaitingHuman = false, canUndo = false) }
-                        apply(GameAction.Roll(dice.roll()))
-                        if (game.phase == Phase.AWAITING_MOVE) delay(settings.rollMs)
+                        _ui.update { it.copy(canUndo = false) }
+                        rollDice(game.current) { dice.roll() }
                     }
                 }
             }
             Phase.AWAITING_MOVE -> {
                 val legal = LudoEngine.legalMoves(game)
                 if (settings.autoMove && legal.size == 1) {
+                    delay(t.autoMovePauseMs)
                     rememberUndo()
-                    apply(GameAction.MoveToken(legal[0]))
-                    delay(settings.moveMs)
+                    applyMove(legal[0])
                     return
                 }
                 val deadline = if (timerMs > 0) clock() + timerMs else null
-                _ui.update { it.copy(awaitingHuman = true, rollingPlayer = -1, legalMoves = legal, turnDeadlineAtMs = deadline) }
+                drainIntents()
+                _ui.update {
+                    it.copy(awaitingHuman = true, rollingPlayer = -1, legalMoves = legal, turnDeadlineAtMs = deadline,
+                        turnPhase = TurnPhase.SELECTING_TOKEN, timings = t)
+                }
                 while (true) {
                     when (val intent = awaitIntent(timerMs)) {
                         null -> { // timer expired: play the best-looking move
+                            awaitUnpaused()
                             rememberUndo()
-                            apply(GameAction.MoveToken(legal.maxBy { MoveScorer.score(game, it) }))
+                            applyMove(legal.maxBy { MoveScorer.score(game, it) })
                             return
                         }
                         is Intent.Move -> {
                             val id = resolveTap(intent.tokenId) ?: continue
                             rememberUndo()
-                            apply(GameAction.MoveToken(id))
-                            delay(settings.moveMs)
+                            applyMove(id)
                             return
                         }
+                        Intent.Undo -> { if (undoPoint != null) { performUndo(); return } }
                         else -> continue
                     }
                 }
@@ -209,27 +254,30 @@ class MatchSession(
         val point = undoPoint ?: return
         undoPoint = null
         game = point.first; matchLog = point.second; stats = point.third
-        publish(emptyList())
+        publish(emptyList(), TurnPhase.NEXT_TURN)
         checkpoint()
     }
 
-    private suspend fun apply(action: GameAction) {
+    private suspend fun apply(action: GameAction, phase: TurnPhase): List<GameEvent> {
         val events = ArrayList<GameEvent>()
         val before = game
         game = withContext(aiDispatcher) { LudoEngine.reduce(before, action, events) }
         matchLog = matchLog.append(action)
         stats = stats.fold(before, events)
-        publish(events)
+        publish(events, phase)
         checkpoint()
+        return events
     }
 
-    private fun publish(events: List<GameEvent>) {
+    private fun publish(events: List<GameEvent>, phase: TurnPhase) {
         val g = game
         _ui.update {
             it.copy(
                 game = g, lastEvents = events, eventSeq = ++seq,
                 rollingPlayer = -1,
                 awaitingHuman = false,
+                turnPhase = if (g.phase == Phase.GAME_OVER) TurnPhase.GAME_OVER else phase,
+                timings = t,
                 legalMoves = if (g.phase == Phase.AWAITING_MOVE) LudoEngine.legalMoves(g) else IntArray(0),
                 canUndo = undoPoint != null,
                 stats = stats,
@@ -274,7 +322,7 @@ class MatchSession(
             teams = cfg.teams.toList(),
             botTiers = cfg.players.map { it.botTier?.name },
         )
-        _ui.update { it.copy(result = result, awaitingHuman = false, turnDeadlineAtMs = null) }
+        _ui.update { it.copy(result = result, awaitingHuman = false, turnDeadlineAtMs = null, turnPhase = TurnPhase.GAME_OVER) }
         onFinished(result)
     }
 

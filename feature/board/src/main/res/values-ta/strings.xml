@@ -14,4 +14,11 @@
     <string name="done">முடிந்தது</string>
     <string name="captures_short">%1$d வெட்டுகள்</string>
     <string name="fortresses_short">%1$d கோட்டைகள்</string>
+    <string name="paused">இடைநிறுத்தம்</string>
+    <string name="resume">தொடர்</string>
+    <string name="exit_match">ஆட்டத்திலிருந்து வெளியேறு</string>
+    <string name="settings">அமைப்புகள்</string>
+    <string name="audio_studio">ஒலி ஸ்டுடியோ</string>
+    <string name="bot_name">பாட்</string>
+    <string name="save_game">ஆட்டத்தைச் சேமி</string>
 </resources>

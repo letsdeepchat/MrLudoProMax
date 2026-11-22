@@ -15,4 +15,11 @@
     <string name="done">Listo</string>
     <string name="captures_short">%1$d capturas</string>
     <string name="fortresses_short">%1$d fortalezas</string>
+    <string name="paused">En pausa</string>
+    <string name="resume">Continuar</string>
+    <string name="exit_match">Salir de la partida</string>
+    <string name="settings">Ajustes</string>
+    <string name="audio_studio">Estudio de audio</string>
+    <string name="bot_name">Bot</string>
+    <string name="save_game">Guardar partida</string>
 </resources>

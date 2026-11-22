@@ -177,7 +177,8 @@ fun ReplayScreen(log: MatchLog, onBack: () -> Unit) {
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } })
     }) { pad ->
         Column(Modifier.fillMaxSize().padding(pad).padding(16.dp)) {
-            BoardCanvas(state, events, step.toLong(), awaitingHuman = false, animationSpeed = 2f, onTokenTap = {}, onStep = {},
+            BoardCanvas(state, events, step.toLong(), selectable = emptySet(), activeSeat = state.seatOf(state.current),
+                timings = com.ludosovereign.session.AnimationTimings(), onTokenTap = {}, onHop = {},
                 modifier = Modifier.fillMaxWidth())
             Text(stringResource(R.string.replay_step, step.toInt(), log.actions.size))
             Slider(value = step, onValueChange = { step = it }, valueRange = 0f..log.actions.size.toFloat().coerceAtLeast(1f),

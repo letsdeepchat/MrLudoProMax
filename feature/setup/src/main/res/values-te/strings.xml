@@ -28,4 +28,8 @@
     <string name="rule_undo_desc">మనుషులు మాత్రమే ఉన్న పాస్ &amp; ప్లే.</string>
     <string name="unbeatable_warning">న్యాయమైన పాచిక కాదు: ఈ బాట్ తన సంఖ్యను తానే ఎంచుకుంటుంది.</string>
     <string name="start_match">ఆట ప్రారంభించు</string>
+    <string name="play">ఆడండి</string>
+    <string name="snakes_ladders">పాములు &amp; నిచ్చెనలు</string>
+    <string name="rules_and_theme">ఇంటి నియమాలు &amp; థీమ్</string>
+    <string name="human">మనిషి</string>
 </resources>

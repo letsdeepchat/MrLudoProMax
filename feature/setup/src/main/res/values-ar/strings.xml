@@ -28,4 +28,8 @@
     <string name="rule_undo_desc">للعب المحلي بين البشر فقط.</string>
     <string name="unbeatable_warning">نرد غير عادل: هذا الروبوت يختار رميته بنفسه.</string>
     <string name="start_match">ابدأ المباراة</string>
+    <string name="play">العب</string>
+    <string name="snakes_ladders">السلم والثعبان</string>
+    <string name="rules_and_theme">قواعد اللعب والسمة</string>
+    <string name="human">إنسان</string>
 </resources>

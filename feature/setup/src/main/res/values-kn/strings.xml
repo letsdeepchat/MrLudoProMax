@@ -28,4 +28,8 @@
     <string name="rule_undo_desc">ಮನುಷ್ಯರು ಮಾತ್ರ ಇರುವ ಪಾಸ್ &amp; ಪ್ಲೇ.</string>
     <string name="unbeatable_warning">ನ್ಯಾಯಯುತ ದಾಳ ಅಲ್ಲ: ಈ ಬಾಟ್ ತನ್ನ ಸಂಖ್ಯೆಯನ್ನು ತಾನೇ ಆರಿಸುತ್ತದೆ.</string>
     <string name="start_match">ಆಟ ಪ್ರಾರಂಭಿಸಿ</string>
+    <string name="play">ಆಡಿ</string>
+    <string name="snakes_ladders">ಹಾವು &amp; ಏಣಿ</string>
+    <string name="rules_and_theme">ಮನೆ ನಿಯಮಗಳು &amp; ಥೀಮ್</string>
+    <string name="human">ಮನುಷ್ಯ</string>
 </resources>

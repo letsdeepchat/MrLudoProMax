@@ -82,9 +82,10 @@ class MainActivity : ComponentActivity() {
             SessionSettings(
                 autoMove = settings.autoMove,
                 undoEnabled = undo,
-                rollAnimationMs = (450 / settings.animationSpeed).toLong(),
+                rollAnimationMs = (380 / settings.animationSpeed).toLong(),
                 moveAnimationMs = (350 / settings.animationSpeed).toLong(),
                 fastAnimations = fast,
+                animationSpeed = settings.animationSpeed,
             )
         }
         var undoForMatch by remember { mutableStateOf(false) }
@@ -143,7 +144,8 @@ class MainActivity : ComponentActivity() {
                 val vm: LudoBoardViewModel = viewModel(
                     factory = LudoBoardViewModel.Factory(launch, sessionSettings(fastForMatch, undoForMatch), c.saves, c.history, c.feedback),
                 )
-                LudoBoardScreen(vm, settings.animationSpeed, undoForMatch, onExit = { nav.popBackStack("home", inclusive = false) })
+                LudoBoardScreen(vm, undoForMatch, onExit = { nav.popBackStack("home", inclusive = false) },
+                    onAudio = { nav.navigate("audio") }, onSettings = { nav.navigate("settings") })
             }
             composable("snl") {
                 val initial = remember { c.pendingSnl } ?: run { nav.popBackStack(); return@composable }

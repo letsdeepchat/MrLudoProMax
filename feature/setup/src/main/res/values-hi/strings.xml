@@ -28,4 +28,8 @@
     <string name="rule_undo_desc">केवल मनुष्यों वाले पास एंड प्ले में।</string>
     <string name="unbeatable_warning">निष्पक्ष पासा नहीं: यह बॉट अपना अंक खुद चुनता है।</string>
     <string name="start_match">मैच शुरू करें</string>
+    <string name="play">खेलें</string>
+    <string name="snakes_ladders">साँप और सीढ़ी</string>
+    <string name="rules_and_theme">घरेलू नियम और थीम</string>
+    <string name="human">इंसान</string>
 </resources>
