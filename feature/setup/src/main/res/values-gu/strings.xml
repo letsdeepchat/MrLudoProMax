@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_title">નવી મેચ</string>
+    <string name="back">પાછળ</string>
+    <string name="game">રમત</string>
+    <string name="board_and_variant">બોર્ડ &amp; પ્રકાર</string>
+    <string name="layout">બોર્ડ ગોઠવણી</string>
+    <string name="players">ખેલાડીઓ</string>
+    <string name="player_n">ખેલાડી %1$d</string>
+    <string name="player_name">ખેલાડી</string>
+    <string name="bot_name">બૉટ</string>
+    <string name="rules">નિયમો</string>
+    <string name="theme">થીમ</string>
+    <string name="tokens_to_win">પહેલા %1$d ઘરે પહોંચાડનાર</string>
+    <string name="turn_timer">10-સેકન્ડ ટર્ન ટાઇમર</string>
+    <string name="team_up_hint">સામસામેના ખૂણા સાથી છે. સાથીઓ એકબીજાને કાપતા નથી, ખાનું વહેંચી શકે છે, અને પૂરો થયેલ ખેલાડી સાથી માટે પાસો ફેંકે છે.</string>
+    <string name="team_up_invalid">ટીમ અપ માટે 4 ખેલાડી (2v2) અથવા હેક્સ બોર્ડ પર 6 ખેલાડી (3v3) જોઈએ.</string>
+    <string name="exact_finish">પૂરું કરવા ચોક્કસ અંક</string>
+    <string name="variant_classic">ક્લાસિક</string>
+    <string name="variant_quick">ક્વિક</string>
+    <string name="variant_rush">રશ</string>
+    <string name="variant_team">ટીમ અપ</string>
+    <string name="rule_fortress">બે-સોગઠી કિલ્લો</string>
+    <string name="rule_fortress_desc">એક જ ખાનામાં તમારી બે કે વધુ સોગઠીઓ કાપી શકાતી નથી.</string>
+    <string name="rule_triple_six">ત્રણ છગ્ગા પર ટર્ન જાય છે</string>
+    <string name="rule_all_places">બધા ક્રમ માટે રમત ચાલુ રાખો</string>
+    <string name="rule_undo">પૂર્વવત્ કરવાની મંજૂરી</string>
+    <string name="rule_undo_desc">ફક્ત માણસો સાથે પાસ &amp; પ્લે.</string>
+    <string name="unbeatable_warning">ન્યાયી પાસો નથી: આ બૉટ પોતાનો અંક જાતે પસંદ કરે છે.</string>
+    <string name="start_match">મેચ શરૂ કરો</string>
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stats_title">Statistiques et historique</string>
+    <string name="back">Retour</string>
+    <string name="new_profile">Nouveau profil</string>
+    <string name="games">Parties</string>
+    <string name="wins">Victoires</string>
+    <string name="losses">Défaites</string>
+    <string name="captures">Prises</string>
+    <string name="times_captured">Fois pris</string>
+    <string name="fortresses">Forteresses construites</string>
+    <string name="tokens_home">Pions arrivés</string>
+    <string name="snl_record">Victoires aux serpents</string>
+    <string name="achievements">Succès</string>
+    <string name="history">Historique</string>
+    <string name="won_by">Gagné par %1$s</string>
+    <string name="replay">Revoir</string>
+    <string name="replay_step">Coup %1$d sur %2$d</string>
+</resources>

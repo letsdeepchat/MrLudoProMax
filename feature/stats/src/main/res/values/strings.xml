@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stats_title">Stats &amp; History</string>
+    <string name="back">Back</string>
+    <string name="new_profile">New profile</string>
+    <string name="games">Matches</string>
+    <string name="wins">Wins</string>
+    <string name="losses">Losses</string>
+    <string name="captures">Cuts made</string>
+    <string name="times_captured">Times cut</string>
+    <string name="fortresses">Fortresses built</string>
+    <string name="tokens_home">Tokens home</string>
+    <string name="snl_record">Snakes &amp; Ladders wins</string>
+    <string name="achievements">Achievements</string>
+    <string name="history">Match history</string>
+    <string name="won_by">Won by %1$s</string>
+    <string name="replay">Replay</string>
+    <string name="replay_step">Move %1$d of %2$d</string>
+</resources>

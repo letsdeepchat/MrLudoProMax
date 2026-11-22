@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_title">नवीन सामना</string>
+    <string name="back">मागे</string>
+    <string name="game">खेळ</string>
+    <string name="board_and_variant">बोर्ड &amp; प्रकार</string>
+    <string name="layout">बोर्ड मांडणी</string>
+    <string name="players">खेळाडू</string>
+    <string name="player_n">खेळाडू %1$d</string>
+    <string name="player_name">खेळाडू</string>
+    <string name="bot_name">बॉट</string>
+    <string name="rules">नियम</string>
+    <string name="theme">थीम</string>
+    <string name="tokens_to_win">प्रथम %1$d घरी पोहोचवणारा</string>
+    <string name="turn_timer">10-सेकंदांचा टर्न टाइमर</string>
+    <string name="team_up_hint">समोरासमोरचे कोपरे संघसहकारी असतात. सहकारी एकमेकांना मारत नाहीत, घर वाटून घेऊ शकतात आणि संपलेला खेळाडू जोडीदारासाठी फासा टाकतो.</string>
+    <string name="team_up_invalid">टीम अपसाठी 4 खेळाडू (2v2) किंवा हेक्स बोर्डवर 6 खेळाडू (3v3) हवे.</string>
+    <string name="exact_finish">पूर्ण करण्यासाठी अचूक आकडा</string>
+    <string name="variant_classic">क्लासिक</string>
+    <string name="variant_quick">क्विक</string>
+    <string name="variant_rush">रश</string>
+    <string name="variant_team">टीम अप</string>
+    <string name="rule_fortress">दुहेरी-सोंगटी किल्ला</string>
+    <string name="rule_fortress_desc">एकाच घरातील तुमच्या दोन किंवा अधिक सोंगट्या मारता येत नाहीत.</string>
+    <string name="rule_triple_six">तीन सहा आल्यास टर्न जातो</string>
+    <string name="rule_all_places">सर्व क्रमांकांसाठी खेळ सुरू ठेवा</string>
+    <string name="rule_undo">पूर्ववत करण्यास परवानगी</string>
+    <string name="rule_undo_desc">फक्त माणसांसाठी पास &amp; प्ले.</string>
+    <string name="unbeatable_warning">न्याय्य फासा नाही: हा बॉट स्वतःचा आकडा स्वतः निवडतो.</string>
+    <string name="start_match">सामना सुरू करा</string>
+</resources>

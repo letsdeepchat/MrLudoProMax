@@ -8,6 +8,8 @@ pluginManagement {
                 includeGroupByRegex("com\\.google\\.testing.*")
             }
         }
+        // Google's official Maven Central mirror first: Central rate-limits shared CI egress IPs.
+        maven("https://maven-central.storage-download.googleapis.com/maven2/")
         mavenCentral()
         gradlePluginPortal()
     }
@@ -23,6 +25,8 @@ dependencyResolutionManagement {
                 includeGroupByRegex("com\\.google\\.testing.*")
             }
         }
+        // Google's official Maven Central mirror first: Central rate-limits shared CI egress IPs.
+        maven("https://maven-central.storage-download.googleapis.com/maven2/")
         mavenCentral()
     }
 }

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings">સેટિંગ્સ</string>
+    <string name="quick_resume">ઝડપી ફરી શરૂ</string>
+    <string name="resume">ફરી શરૂ કરો</string>
+    <string name="play_ludo">લૂડો રમો</string>
+    <string name="play_ludo_sub">કમ્પ્યુટર સામે અથવા પાસ &amp; પ્લે · ક્લાસિક, ક્વિક, રશ, ટીમ અપ</string>
+    <string name="play_snakes">સાપ &amp; સીડી</string>
+    <string name="play_snakes_sub">7 બોર્ડ · 2–6 ખેલાડીઓ</string>
+    <string name="stats">આંકડા &amp; ઇતિહાસ</string>
+    <string name="audio_studio">ઑડિયો સ્ટુડિયો</string>
+    <string name="saved_games">સાચવેલી રમતો</string>
+    <string name="slot_n">સ્લૉટ %1$d</string>
+    <string name="delete">કાઢી નાખો</string>
+    <string name="offline_promise">સંપૂર્ણ ઑફલાઇન. કોઈ જાહેરાત નહીં, કોઈ ખરીદી નહીં, બધું અનલૉક.</string>
+    <string name="done">થઈ ગયું</string>
+    <string name="theme">થીમ</string>
+    <string name="colorblind">રંગઅંધત્વ-સુરક્ષિત સોગઠીઓ</string>
+    <string name="colorblind_desc">Okabe–Ito રંગો; દરેક સોગઠી પર એક આકાર પણ હોય છે.</string>
+    <string name="gameplay">રમત</string>
+    <string name="auto_move">ઑટો-મૂવ</string>
+    <string name="auto_move_desc">ફક્ત એક જ માન્ય ચાલ હોય ત્યારે આપમેળે રમે છે.</string>
+    <string name="animation_speed">એનિમેશન ઝડપ</string>
+    <string name="language">ભાષા</string>
+</resources>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_title">కొత్త ఆట</string>
+    <string name="back">వెనుకకు</string>
+    <string name="game">ఆట</string>
+    <string name="board_and_variant">బోర్డు &amp; రకం</string>
+    <string name="layout">బోర్డు లేఅవుట్</string>
+    <string name="players">ఆటగాళ్లు</string>
+    <string name="player_n">ఆటగాడు %1$d</string>
+    <string name="player_name">ఆటగాడు</string>
+    <string name="bot_name">బాట్</string>
+    <string name="rules">నియమాలు</string>
+    <string name="theme">థీమ్</string>
+    <string name="tokens_to_win">ముందుగా %1$d ఇంటికి చేర్చినవారు</string>
+    <string name="turn_timer">10-సెకన్ల టర్న్ టైమర్</string>
+    <string name="team_up_hint">ఎదురెదురు మూలలు సహచరులు. సహచరులు ఒకరినొకరు కొట్టరు, గడులు పంచుకోవచ్చు, ముగించిన ఆటగాడు భాగస్వామి కోసం వేస్తాడు.</string>
+    <string name="team_up_invalid">టీమ్ అప్‌కు 4 ఆటగాళ్లు (2v2) లేదా హెక్స్ బోర్డుపై 6 ఆటగాళ్లు (3v3) కావాలి.</string>
+    <string name="exact_finish">ముగించడానికి ఖచ్చితమైన సంఖ్య</string>
+    <string name="variant_classic">క్లాసిక్</string>
+    <string name="variant_quick">క్విక్</string>
+    <string name="variant_rush">రష్</string>
+    <string name="variant_team">టీమ్ అప్</string>
+    <string name="rule_fortress">రెండు కాయల కోట</string>
+    <string name="rule_fortress_desc">ఒకే గడిలో మీ రెండు లేదా అంతకంటే ఎక్కువ కాయలను కొట్టలేరు.</string>
+    <string name="rule_triple_six">మూడు ఆరులు వస్తే టర్న్ పోతుంది</string>
+    <string name="rule_all_places">అన్ని స్థానాల కోసం ఆట కొనసాగించు</string>
+    <string name="rule_undo">అన్‌డూ అనుమతించు</string>
+    <string name="rule_undo_desc">మనుషులు మాత్రమే ఉన్న పాస్ &amp; ప్లే.</string>
+    <string name="unbeatable_warning">న్యాయమైన పాచిక కాదు: ఈ బాట్ తన సంఖ్యను తానే ఎంచుకుంటుంది.</string>
+    <string name="start_match">ఆట ప్రారంభించు</string>
+</resources>

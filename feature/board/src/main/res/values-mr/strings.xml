@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="back">मागे</string>
+    <string name="undo">शेवटची चाल पूर्ववत करा</string>
+    <string name="menu">मेनू</string>
+    <string name="save_to_slot">स्लॉट %1$d मध्ये जतन करा</string>
+    <string name="saved_to_slot">स्लॉट %1$d मध्ये जतन केले</string>
+    <string name="game_over">खेळ संपला</string>
+    <string name="bot_thinking">विचार करत आहे…</string>
+    <string name="tap_dice">फासा टाकण्यासाठी टॅप करा</string>
+    <string name="pick_token">चमकणारी सोंगटी निवडा</string>
+    <string name="dice">फासा</string>
+    <string name="winner">%1$s जिंकले!</string>
+    <string name="done">झाले</string>
+    <string name="captures_short">%1$d मारल्या</string>
+    <string name="fortresses_short">%1$d किल्ले</string>
+</resources>

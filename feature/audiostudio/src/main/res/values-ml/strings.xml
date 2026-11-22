@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_studio">ഓഡിയോ സ്റ്റുഡിയോ</string>
+    <string name="back">തിരികെ</string>
+    <string name="sound_pack">ശബ്ദ പായ്ക്ക്</string>
+    <string name="volume">ശബ്ദം</string>
+    <string name="master">മാസ്റ്റർ</string>
+    <string name="effects">കളി ശബ്ദങ്ങൾ</string>
+    <string name="jingles">ജയ &amp; തോൽവി സംഗീതം</string>
+    <string name="interface_sounds">ഇന്റർഫേസ്</string>
+    <string name="haptics">ഹാപ്റ്റിക്സ്</string>
+    <string name="haptics_on">വൈബ്രേഷൻ പ്രതികരണം</string>
+    <string name="haptic_strength">തീവ്രത</string>
+</resources>

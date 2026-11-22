@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings">ಸೆಟ್ಟಿಂಗ್‌ಗಳು</string>
+    <string name="quick_resume">ತ್ವರಿತ ಮುಂದುವರಿಕೆ</string>
+    <string name="resume">ಮುಂದುವರಿಸಿ</string>
+    <string name="play_ludo">ಲೂಡೋ ಆಡಿ</string>
+    <string name="play_ludo_sub">ಕಂಪ್ಯೂಟರ್ ವಿರುದ್ಧ ಅಥವಾ ಪಾಸ್ &amp; ಪ್ಲೇ · ಕ್ಲಾಸಿಕ್, ಕ್ವಿಕ್, ರಶ್, ಟೀಮ್ ಅಪ್</string>
+    <string name="play_snakes">ಹಾವು &amp; ಏಣಿ</string>
+    <string name="play_snakes_sub">7 ಬೋರ್ಡ್‌ಗಳು · 2–6 ಆಟಗಾರರು</string>
+    <string name="stats">ಅಂಕಿಅಂಶ &amp; ಇತಿಹಾಸ</string>
+    <string name="audio_studio">ಆಡಿಯೋ ಸ್ಟುಡಿಯೋ</string>
+    <string name="saved_games">ಉಳಿಸಿದ ಆಟಗಳು</string>
+    <string name="slot_n">ಸ್ಲಾಟ್ %1$d</string>
+    <string name="delete">ಅಳಿಸಿ</string>
+    <string name="offline_promise">ಸಂಪೂರ್ಣ ಆಫ್‌ಲೈನ್. ಜಾಹೀರಾತು ಇಲ್ಲ, ಖರೀದಿ ಇಲ್ಲ, ಎಲ್ಲವೂ ಅನ್‌ಲಾಕ್.</string>
+    <string name="done">ಮುಗಿಯಿತು</string>
+    <string name="theme">ಥೀಮ್</string>
+    <string name="colorblind">ಬಣ್ಣಗುರುಡು-ಸುರಕ್ಷಿತ ಕಾಯಿಗಳು</string>
+    <string name="colorblind_desc">Okabe–Ito ಬಣ್ಣಗಳು; ಪ್ರತಿ ಕಾಯಿಯ ಮೇಲೂ ಒಂದು ಆಕಾರ ಇರುತ್ತದೆ.</string>
+    <string name="gameplay">ಆಟದ ವಿಧಾನ</string>
+    <string name="auto_move">ಸ್ವಯಂ ಚಲನೆ</string>
+    <string name="auto_move_desc">ಒಂದೇ ಮಾನ್ಯ ಚಲನೆ ಇದ್ದಾಗ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಆಡುತ್ತದೆ.</string>
+    <string name="animation_speed">ಅನಿಮೇಷನ್ ವೇಗ</string>
+    <string name="language">ಭಾಷೆ</string>
+</resources>

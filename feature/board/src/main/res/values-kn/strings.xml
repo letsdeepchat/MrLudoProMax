@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="back">ಹಿಂದೆ</string>
+    <string name="undo">ಕೊನೆಯ ಚಲನೆ ರದ್ದುಗೊಳಿಸಿ</string>
+    <string name="menu">ಮೆನು</string>
+    <string name="save_to_slot">ಸ್ಲಾಟ್ %1$d ರಲ್ಲಿ ಉಳಿಸಿ</string>
+    <string name="saved_to_slot">ಸ್ಲಾಟ್ %1$d ರಲ್ಲಿ ಉಳಿಸಲಾಗಿದೆ</string>
+    <string name="game_over">ಆಟ ಮುಗಿಯಿತು</string>
+    <string name="bot_thinking">ಯೋಚಿಸುತ್ತಿದೆ…</string>
+    <string name="tap_dice">ಉರುಳಿಸಲು ದಾಳವನ್ನು ಒತ್ತಿ</string>
+    <string name="pick_token">ಹೊಳೆಯುವ ಕಾಯಿಯನ್ನು ಆರಿಸಿ</string>
+    <string name="dice">ದಾಳ</string>
+    <string name="winner">%1$s ಗೆದ್ದರು!</string>
+    <string name="done">ಮುಗಿಯಿತು</string>
+    <string name="captures_short">%1$d ಕತ್ತರಿಸಿದವು</string>
+    <string name="fortresses_short">%1$d ಕೋಟೆಗಳು</string>
+</resources>

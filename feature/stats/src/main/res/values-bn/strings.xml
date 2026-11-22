@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stats_title">পরিসংখ্যান &amp; ইতিহাস</string>
+    <string name="back">পিছনে</string>
+    <string name="new_profile">নতুন প্রোফাইল</string>
+    <string name="games">ম্যাচ</string>
+    <string name="wins">জয়</string>
+    <string name="losses">পরাজয়</string>
+    <string name="captures">কাটা ঘুঁটি</string>
+    <string name="times_captured">কাটা পড়েছে</string>
+    <string name="fortresses">তৈরি দুর্গ</string>
+    <string name="tokens_home">ঘরে পৌঁছানো ঘুঁটি</string>
+    <string name="snl_record">সাপ &amp; মই জয়</string>
+    <string name="achievements">অর্জন</string>
+    <string name="history">ম্যাচের ইতিহাস</string>
+    <string name="won_by">%1$s জিতেছে</string>
+    <string name="replay">রিপ্লে</string>
+    <string name="replay_step">চাল %1$d / %2$d</string>
+</resources>

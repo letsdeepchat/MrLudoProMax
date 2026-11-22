@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_title">Ludo Sovereign</string>
+    <string name="settings">Ajustes</string>
+    <string name="quick_resume">Continuar rápido</string>
+    <string name="resume">Continuar</string>
+    <string name="play_ludo">Jugar Ludo</string>
+    <string name="play_ludo_sub">Contra la CPU o en local · Clásico, Rápido, Rush, Equipos</string>
+    <string name="play_snakes">Serpientes y escaleras</string>
+    <string name="play_snakes_sub">7 tableros · 2–6 jugadores</string>
+    <string name="stats">Estadísticas e historial</string>
+    <string name="audio_studio">Estudio de audio</string>
+    <string name="saved_games">Partidas guardadas</string>
+    <string name="slot_n">Ranura %1$d</string>
+    <string name="delete">Eliminar</string>
+    <string name="offline_promise">Totalmente sin conexión. Sin anuncios, sin compras, todo desbloqueado.</string>
+    <string name="done">Listo</string>
+    <string name="theme">Tema</string>
+    <string name="colorblind">Fichas aptas para daltonismo</string>
+    <string name="colorblind_desc">Paleta Okabe–Ito; cada ficha lleva también una forma.</string>
+    <string name="gameplay">Juego</string>
+    <string name="auto_move">Movimiento automático</string>
+    <string name="auto_move_desc">Juega solo la jugada cuando hay una única opción.</string>
+    <string name="animation_speed">Velocidad de animación</string>
+    <string name="language">Idioma</string>
+</resources>

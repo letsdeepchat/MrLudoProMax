@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings">அமைப்புகள்</string>
+    <string name="quick_resume">விரைவு தொடர்</string>
+    <string name="resume">தொடர்</string>
+    <string name="play_ludo">லூடோ விளையாடு</string>
+    <string name="play_ludo_sub">கணினியுடன் அல்லது பாஸ் &amp; ப்ளே · கிளாசிக், விரைவு, ரஷ், அணி</string>
+    <string name="play_snakes">பாம்பும் ஏணியும்</string>
+    <string name="play_snakes_sub">7 பலகைகள் · 2–6 வீரர்கள்</string>
+    <string name="stats">புள்ளிவிவரம் &amp; வரலாறு</string>
+    <string name="audio_studio">ஒலி ஸ்டுடியோ</string>
+    <string name="saved_games">சேமித்த ஆட்டங்கள்</string>
+    <string name="slot_n">இடம் %1$d</string>
+    <string name="delete">நீக்கு</string>
+    <string name="offline_promise">முழுமையாக ஆஃப்லைன். விளம்பரம் இல்லை, கட்டணம் இல்லை, அனைத்தும் திறந்தவை.</string>
+    <string name="done">முடிந்தது</string>
+    <string name="theme">தீம்</string>
+    <string name="colorblind">நிறக்குருடு-பாதுகாப்பான காய்கள்</string>
+    <string name="colorblind_desc">Okabe–Ito வண்ணத் தொகுப்பு; ஒவ்வொரு காயிலும் ஒரு வடிவமும் உண்டு.</string>
+    <string name="gameplay">ஆட்டம்</string>
+    <string name="auto_move">தானியங்கி நகர்வு</string>
+    <string name="auto_move_desc">ஒரே ஒரு சரியான நகர்வு இருந்தால் தானாக நகர்த்தும்.</string>
+    <string name="animation_speed">அனிமேஷன் வேகம்</string>
+    <string name="language">மொழி</string>
+</resources>

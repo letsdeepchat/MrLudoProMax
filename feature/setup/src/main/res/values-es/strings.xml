@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_title">Nueva partida</string>
+    <string name="back">Atrás</string>
+    <string name="game">Juego</string>
+    <string name="board_and_variant">Tablero y variante</string>
+    <string name="layout">Diseño del tablero</string>
+    <string name="players">Jugadores</string>
+    <string name="player_n">Jugador %1$d</string>
+    <string name="player_name">Jugador</string>
+    <string name="bot_name">Bot</string>
+    <string name="rules">Reglas</string>
+    <string name="theme">Tema</string>
+    <string name="tokens_to_win">Primero en llevar %1$d a casa</string>
+    <string name="turn_timer">Temporizador de 10 segundos</string>
+    <string name="team_up_hint">Las esquinas opuestas son compañeros. Nunca se capturan entre sí, pueden compartir casillas y quien termina tira por su compañero.</string>
+    <string name="team_up_invalid">Equipos requiere 4 jugadores (2c2) o 6 en el tablero hexagonal (3c3).</string>
+    <string name="exact_finish">Tirada exacta para terminar</string>
+    <string name="variant_classic">Clásico</string>
+    <string name="variant_quick">Rápido</string>
+    <string name="variant_rush">Rush</string>
+    <string name="variant_team">Equipos</string>
+    <string name="rule_fortress">Fortaleza de dos fichas</string>
+    <string name="rule_fortress_desc">Dos o más fichas tuyas en una casilla no pueden ser capturadas.</string>
+    <string name="rule_triple_six">Tres seises pierden el turno</string>
+    <string name="rule_all_places">Seguir hasta decidir todos los puestos</string>
+    <string name="rule_undo">Permitir deshacer</string>
+    <string name="rule_undo_desc">Solo en partidas locales entre humanos.</string>
+    <string name="unbeatable_warning">Dado no justo: este bot elige su propia tirada.</string>
+    <string name="start_match">Empezar partida</string>
+</resources>

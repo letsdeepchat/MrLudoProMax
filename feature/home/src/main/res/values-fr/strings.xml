@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_title">Ludo Sovereign</string>
+    <string name="settings">Paramètres</string>
+    <string name="quick_resume">Reprise rapide</string>
+    <string name="resume">Reprendre</string>
+    <string name="play_ludo">Jouer au Ludo</string>
+    <string name="play_ludo_sub">Contre l\'ordinateur ou en local · Classique, Rapide, Rush, Équipes</string>
+    <string name="play_snakes">Serpents et échelles</string>
+    <string name="play_snakes_sub">7 plateaux · 2–6 joueurs</string>
+    <string name="stats">Statistiques et historique</string>
+    <string name="audio_studio">Studio audio</string>
+    <string name="saved_games">Parties sauvegardées</string>
+    <string name="slot_n">Emplacement %1$d</string>
+    <string name="delete">Supprimer</string>
+    <string name="offline_promise">Entièrement hors ligne. Sans pub, sans achats, tout est débloqué.</string>
+    <string name="done">OK</string>
+    <string name="theme">Thème</string>
+    <string name="colorblind">Pions adaptés au daltonisme</string>
+    <string name="colorblind_desc">Palette Okabe–Ito ; chaque pion porte aussi une forme.</string>
+    <string name="gameplay">Jeu</string>
+    <string name="auto_move">Coup automatique</string>
+    <string name="auto_move_desc">Joue automatiquement quand un seul coup est possible.</string>
+    <string name="animation_speed">Vitesse d\'animation</string>
+    <string name="language">Langue</string>
+</resources>

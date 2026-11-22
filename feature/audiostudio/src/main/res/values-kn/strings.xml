@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_studio">ಆಡಿಯೋ ಸ್ಟುಡಿಯೋ</string>
+    <string name="back">ಹಿಂದೆ</string>
+    <string name="sound_pack">ಧ್ವನಿ ಪ್ಯಾಕ್</string>
+    <string name="volume">ಧ್ವನಿಮಟ್ಟ</string>
+    <string name="master">ಮಾಸ್ಟರ್</string>
+    <string name="effects">ಆಟದ ಧ್ವನಿಗಳು</string>
+    <string name="jingles">ಗೆಲುವು &amp; ಸೋಲಿನ ಸಂಗೀತ</string>
+    <string name="interface_sounds">ಇಂಟರ್‌ಫೇಸ್</string>
+    <string name="haptics">ಹ್ಯಾಪ್ಟಿಕ್ಸ್</string>
+    <string name="haptics_on">ಕಂಪನ ಪ್ರತಿಕ್ರಿಯೆ</string>
+    <string name="haptic_strength">ತೀವ್ರತೆ</string>
+</resources>

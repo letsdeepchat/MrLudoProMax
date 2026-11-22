@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_title">لودو سوفرين</string>
+    <string name="settings">الإعدادات</string>
+    <string name="quick_resume">استئناف سريع</string>
+    <string name="resume">استئناف</string>
+    <string name="play_ludo">العب لودو</string>
+    <string name="play_ludo_sub">ضد الحاسوب أو على جهاز واحد · كلاسيكي، سريع، رَش، فرق</string>
+    <string name="play_snakes">السلم والثعبان</string>
+    <string name="play_snakes_sub">7 ألواح · 2–6 لاعبين</string>
+    <string name="stats">الإحصاءات والسجل</string>
+    <string name="audio_studio">استوديو الصوت</string>
+    <string name="saved_games">الألعاب المحفوظة</string>
+    <string name="slot_n">الخانة %1$d</string>
+    <string name="delete">حذف</string>
+    <string name="offline_promise">دون اتصال بالكامل. بلا إعلانات ولا مشتريات، وكل شيء مفتوح.</string>
+    <string name="done">تم</string>
+    <string name="theme">المظهر</string>
+    <string name="colorblind">قطع مناسبة لعمى الألوان</string>
+    <string name="colorblind_desc">لوحة أوكابي–إيتو؛ ولكل قطعة شكل مميز أيضًا.</string>
+    <string name="gameplay">اللعب</string>
+    <string name="auto_move">حركة تلقائية</string>
+    <string name="auto_move_desc">تنفيذ الحركة تلقائيًا عندما تكون الوحيدة الممكنة.</string>
+    <string name="animation_speed">سرعة الحركة</string>
+    <string name="language">اللغة</string>
+</resources>
