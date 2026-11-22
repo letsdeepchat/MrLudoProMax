@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.map
 
 /** Everything the player can tweak. All features are unlocked; there is nothing to buy. */
 data class AppSettings(
-    val themeId: String = "royal_ivory",
+    val themeId: String = "classic_royal",
     val colorblindPalette: Boolean = false,
     val soundPackId: String = "wood",
     val masterVolume: Float = 0.9f,

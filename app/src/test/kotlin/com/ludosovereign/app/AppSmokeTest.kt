@@ -10,8 +10,11 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.assertIsDisplayed
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Assert.assertTrue
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -55,6 +58,13 @@ class AppSmokeTest {
         rule.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText(text))
     }
 
+    private fun exitBoard() {
+        rule.onNodeWithContentDescription("Menu").performClick()
+        settle(300)
+        rule.onNodeWithText("Exit match").performClick()
+        settle(500)
+    }
+
     @Test
     fun walksEveryScreen() {
         settle(800)
@@ -62,26 +72,54 @@ class AppSmokeTest {
 
         rule.onNodeWithText("Play Ludo").performClick()
         settle(300)
-        shot("02_setup_ludo")
-        scrollTo("Start match")
-        rule.onNodeWithText("Start match").performClick()
+        // Spec check: 3 humans + 1 bot in two taps, Play visible without scrolling.
+        rule.onNodeWithContentDescription("Player 2 Bot").performClick()
+        rule.onNodeWithContentDescription("Player 3 Bot").performClick()
+        settle(200)
+        rule.onNodeWithContentDescription("Player 2 Human").assertExists()
+        rule.onNodeWithContentDescription("Player 4 Bot").assertExists()
+        rule.onNodeWithText("Play").assertIsDisplayed()
+        shot("02_setup_3h1b")
+        // Back to 1 human + 3 bots for the gameplay run.
+        rule.onNodeWithContentDescription("Player 2 Human").performClick()
+        rule.onNodeWithContentDescription("Player 3 Human").performClick()
+        rule.onNodeWithText("Play").performClick()
         settle(600)
         shot("03_board_start")
-        // Human seat: roll a few times and let bots answer.
-        repeat(12) {
-            rule.onNodeWithContentDescription("Dice", substring = true).performClick()
-            settle(1200)
+        // Human seat: roll whenever it is our turn, pick the first glowing pawn, let bots answer.
+        repeat(40) {
+            runCatching { rule.onNodeWithContentDescription("Dice", substring = true).performClick() }
+            settle(900)
+            tapFirstMovable()
+            settle(600)
         }
         shot("04_board_midgame")
-        rule.onNodeWithContentDescription("Back").performClick()
+        // Wait for our turn, then catch the dice mid-tumble and a pawn mid-hop.
+        var humanRolls = 0
+        repeat(60) {
+            if (humanRolls < 6 && rule.onAllNodes(hasText("Player · Tap the dice to roll")).fetchSemanticsNodes().isNotEmpty()) {
+                rule.onNodeWithContentDescription("Dice", substring = true).performClick()
+                humanRolls++
+                if (humanRolls == 1) { settle(150); shot("04b_board_rolling") }
+                settle(700)
+                tapFirstMovable()
+                if (humanRolls == 1) { settle(300); shot("04d_board_hop") }
+            }
+            settle(500)
+        }
+        assertTrue("the human seat got to roll", humanRolls >= 3)
+        shot("04e_board_later")
+        rule.onNodeWithContentDescription("Menu").performClick()
+        settle(300)
+        shot("04c_pause_menu")
+        rule.onNodeWithText("Exit match").performClick()
         settle(500)
         shot("05_home_resume")
 
         rule.onNodeWithText("Snakes & Ladders").performClick()
         settle(300)
         shot("06_setup_snakes")
-        scrollTo("Start match")
-        rule.onNodeWithText("Start match").performClick()
+        rule.onNodeWithText("Play").performClick()
         settle(800)
         shot("07_snakes_board")
         rule.onNodeWithContentDescription("Back").performClick()
@@ -109,26 +147,42 @@ class AppSmokeTest {
         rule.onNodeWithText("Done").performClick()
         settle(300)
 
-        // Six-player hex board, dark theme, let it run for a while.
+        // Six-player hex board, dark theme, all bots, let it run for a while.
         rule.onNodeWithText("Play Ludo").performClick()
         settle(300)
         rule.onNodeWithText("Hex 6").performClick()
         settle(200)
-        rule.onNodeWithText("6").performClick()
+        rule.onNodeWithText("6P").performClick()
         settle(200)
-        rule.onAllNodes(hasText("Bot")).onFirst().performClick() // seat 1 becomes a bot too
+        rule.onNodeWithContentDescription("Player 1 Human").performClick()
         settle(200)
         shot("11_setup_hex")
-        scrollTo("Start match")
-        rule.onNodeWithText("Start match").performClick()
-        settle(600)
-        settle(25_000) // all six seats are bots: they should make real progress unattended
+        rule.onNodeWithText("Play").performClick()
+        settle(25_000)
         shot("12_hex_midgame_dark")
+        exitBoard()
+
+        // Two-player match: unused corners dim.
+        rule.onNodeWithText("Play Ludo").performClick()
+        settle(300)
+        rule.onNodeWithText("Classic 4").performClick()
+        rule.onNodeWithText("2P").performClick()
+        settle(200)
+        rule.onNodeWithText("Play").performClick()
+        settle(800)
+        shot("13_board_2p_dark")
+        exitBoard()
+    }
+
+    /** Picks the first glowing pawn through its accessibility target, if the human has to choose. */
+    private fun tapFirstMovable() {
+        val nodes = rule.onAllNodes(hasContentDescription("Movable pawn", substring = true))
+        if (nodes.fetchSemanticsNodes().isNotEmpty()) nodes.onFirst().performClick()
     }
 
     @Test @Config(qualifiers = "ta-w411dp-h891dp-xxhdpi")
-    fun tamilHome() { settle(800); shot("13_home_tamil") }
+    fun tamilHome() { settle(800); shot("14_home_tamil") }
 
     @Test @Config(qualifiers = "ar-w411dp-h891dp-xxhdpi")
-    fun arabicHomeIsRtl() { settle(800); shot("14_home_arabic_rtl") }
+    fun arabicHomeIsRtl() { settle(800); shot("15_home_arabic_rtl") }
 }

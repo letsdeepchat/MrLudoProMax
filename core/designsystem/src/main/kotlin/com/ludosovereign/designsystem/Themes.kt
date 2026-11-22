@@ -30,6 +30,12 @@ data class BoardTheme(
     /** Six player colours in seat order. */
     val tokens: List<Color>,
     val fortressMetal: List<Color> = listOf(Color(0xFFF5F5F5), Color(0xFF9E9E9E), Color(0xFFE0E0E0), Color(0xFF757575)),
+    /** Inner container of each yard that holds the four spawn bases. */
+    val yardInner: Color = cell,
+    /** Frame drawn around the board. */
+    val frame: Color = cellBorder,
+    /** Subtle geometric pattern behind the board. */
+    val patterned: Boolean = false,
 )
 
 object BoardThemes {
@@ -41,6 +47,16 @@ object BoardThemes {
         Color(0xFFE53935), Color(0xFF43A047), Color(0xFFFDD835), Color(0xFF1E88E5), Color(0xFF8E24AA), Color(0xFFFB8C00),
     )
 
+    /** Default: deep royal-blue patterned backdrop, white high-contrast track, vivid primary yards. */
+    val CLASSIC_ROYAL = BoardTheme(
+        "classic_royal", "Classic Royal", true,
+        background = Color(0xFF0B2A6B), surface = Color(0xFF123782), boardBase = Color(0xFFFFFFFF),
+        cell = Color(0xFFFFFFFF), cellBorder = Color(0xFF1B1F2A), safeCell = Color(0xFFFFFFFF),
+        center = Color(0xFFFFFFFF), accent = Color(0xFFFFC62F), onSurface = Color(0xFFF2F5FF),
+        tokens = listOf(Color(0xFFE5322D), Color(0xFF22A447), Color(0xFFF7C51E), Color(0xFF1E6FE0), Color(0xFF8E3CCB), Color(0xFFF57C1F)),
+        fortressMetal = listOf(Color(0xFFFFF1B8), Color(0xFFC9961A), Color(0xFFFFD54F), Color(0xFF8D6608)),
+        yardInner = Color(0xFFFFFFFF), frame = Color(0xFF07163B), patterned = true,
+    )
     val ROYAL_IVORY = BoardTheme(
         "royal_ivory", "Royal Ivory", false,
         background = Color(0xFFF6F1E7), surface = Color(0xFFFFFBF2), boardBase = Color(0xFFEDE3CF),
@@ -94,14 +110,14 @@ object BoardThemes {
         center = Color(0xFF333333), accent = Color(0xFFFFFFFF), onSurface = Color(0xFFFFFFFF), tokens = COLORBLIND_TOKENS,
     )
 
-    val ALL = listOf(ROYAL_IVORY, MIDNIGHT_SOVEREIGN, EMERALD_JUNGLE, DESERT_SAND, OCEAN_GLASS, NEON_ARCADE, SAKURA_BLOSSOM, GRAPHITE_CONTRAST)
+    val ALL = listOf(CLASSIC_ROYAL, ROYAL_IVORY, MIDNIGHT_SOVEREIGN, EMERALD_JUNGLE, DESERT_SAND, OCEAN_GLASS, NEON_ARCADE, SAKURA_BLOSSOM, GRAPHITE_CONTRAST)
 
-    fun byId(id: String): BoardTheme = ALL.firstOrNull { it.id == id } ?: ROYAL_IVORY
+    fun byId(id: String): BoardTheme = ALL.firstOrNull { it.id == id } ?: CLASSIC_ROYAL
 
     val GLYPHS = TokenGlyph.entries
 }
 
-val LocalBoardTheme = staticCompositionLocalOf { BoardThemes.ROYAL_IVORY }
+val LocalBoardTheme = staticCompositionLocalOf { BoardThemes.CLASSIC_ROYAL }
 val LocalColorblind = staticCompositionLocalOf { false }
 
 fun BoardTheme.tokenColor(colorIndex: Int, colorblind: Boolean): Color =

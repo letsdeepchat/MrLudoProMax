@@ -1,49 +1,76 @@
 package com.ludosovereign.feature.setup
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ludosovereign.designsystem.BoardThemes
-import com.ludosovereign.designsystem.ChoiceRow
 import com.ludosovereign.designsystem.LabeledSwitch
 import com.ludosovereign.designsystem.LocalBoardTheme
 import com.ludosovereign.designsystem.LocalColorblind
-import com.ludosovereign.designsystem.SectionCard
+import com.ludosovereign.designsystem.RobotIcon
 import com.ludosovereign.designsystem.tokenColor
 import com.ludosovereign.engine.BoardTopology
 import com.ludosovereign.engine.BotTier
@@ -58,7 +85,6 @@ import com.ludosovereign.engine.snl.SnlRules
 import com.ludosovereign.engine.snl.SnlState
 
 enum class GameType { LUDO, SNAKES }
-enum class PlayMode { VS_COMPUTER, PASS_AND_PLAY }
 
 sealed interface SetupResult {
     data class Ludo(val config: MatchConfig, val undo: Boolean, val fast: Boolean) : SetupResult
@@ -73,10 +99,12 @@ private class PlayerRow(name: String, kind: PlayerKind, tier: BotTier, color: In
 }
 
 /**
- * Match setup: game type, mode, board, variant, players (human/bot and AI tier per seat) and rule
- * toggles. Everything is unlocked. The Unbeatable tier carries a visible non-fair-dice warning.
+ * Compact match setup. Game, board/mode and player count sit in one block at the top, then one
+ * row per seat with a colour dot (tap to swap), an editable name and a one-tap Human/Bot toggle
+ * (bots get an inline difficulty pill). House rules and theme fold away, and Play is pinned to
+ * the bottom so it is always reachable without scrolling.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SetupScreen(
     initialType: GameType,
@@ -89,7 +117,6 @@ fun SetupScreen(
     onStart: (SetupResult) -> Unit,
 ) {
     var type by remember { mutableStateOf(initialType) }
-    var mode by remember { mutableStateOf(PlayMode.VS_COMPUTER) }
     var board by remember { mutableStateOf(BoardTopology.CLASSIC_4) }
     var variant by remember { mutableStateOf(Variant.CLASSIC) }
     var quickTarget by remember { mutableStateOf(1) }
@@ -101,6 +128,7 @@ fun SetupScreen(
     var undo by remember { mutableStateOf(undoDefault) }
     var snlLayout by remember { mutableStateOf(SnlLayouts.CLASSIC_100) }
     var snlExact by remember { mutableStateOf(true) }
+    var rulesOpen by rememberSaveable { mutableStateOf(false) }
     val botName = stringResource(R.string.bot_name)
     val playerName = stringResource(R.string.player_name)
     val rows = remember {
@@ -113,97 +141,157 @@ fun SetupScreen(
     val maxPlayers = if (type == GameType.SNAKES) 6 else board.seats
     if (count > maxPlayers) count = maxPlayers
     val teamValid = variant != Variant.TEAM_UP || count == 4 || (count == 6 && board == BoardTopology.HEX_6)
+    val active = rows.take(count)
+    val allHuman = active.all { it.kind == PlayerKind.HUMAN }
 
-    fun applyMode(m: PlayMode) {
-        mode = m
-        rows.forEachIndexed { i, r ->
-            if (i == 0) return@forEachIndexed
-            r.kind = if (m == PlayMode.VS_COMPUTER) PlayerKind.BOT else PlayerKind.HUMAN
-            r.name = if (r.kind == PlayerKind.BOT) "$botName ${i + 1}" else "$playerName ${i + 1}"
+    fun toggleKind(i: Int) {
+        val r = rows[i]
+        val wasDefault = r.name == "$botName ${i + 1}" || r.name == "$playerName ${i + 1}"
+        r.kind = if (r.kind == PlayerKind.BOT) PlayerKind.HUMAN else PlayerKind.BOT
+        if (wasDefault) r.name = if (r.kind == PlayerKind.BOT) "$botName ${i + 1}" else "$playerName ${i + 1}"
+    }
+
+    /** Next colour; if another active seat already has it, the two swap so colours never collide. */
+    fun cycleColor(i: Int) {
+        val r = rows[i]
+        val next = (r.color + 1) % 6
+        rows.take(count).withIndex().firstOrNull { it.index != i && it.value.color == next }?.value?.color = r.color
+        r.color = next
+    }
+
+    fun start() {
+        val specs = active.mapIndexed { i, r ->
+            PlayerSpec(r.name.ifBlank { "P${i + 1}" }, r.kind, if (r.kind == PlayerKind.BOT) r.tier else null, r.color,
+                profileId = if (i == 0 && r.kind == PlayerKind.HUMAN) profileId else null)
+        }
+        if (type == GameType.SNAKES) {
+            onStart(SetupResult.Snakes(SnakesAndLaddersEngine.newGame(snlLayout, specs, SnlRules(exactFinish = snlExact))))
+        } else {
+            val base = when (variant) {
+                Variant.CLASSIC -> RuleSet.classic()
+                Variant.QUICK -> RuleSet.quick(quickTarget)
+                Variant.RUSH -> RuleSet.rush(if (rushTimer) 10 else 0)
+                Variant.TEAM_UP -> RuleSet.teamUp()
+            }
+            val rules = base.copy(fortressEnabled = fortress, tripleSixForfeit = tripleSix, playForAllPlacements = allPlacements)
+            onStart(SetupResult.Ludo(MatchConfig.create(board, rules, specs), undo && allHuman, variant == Variant.RUSH))
         }
     }
 
-    Scaffold(topBar = {
-        TopAppBar(
-            title = { Text(stringResource(R.string.setup_title)) },
-            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } },
-        )
-    }) { pad ->
-        Column(
-            Modifier.fillMaxSize().padding(pad).verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            SectionCard(stringResource(R.string.game)) {
-                ChoiceRow(GameType.entries, type, { if (it == GameType.LUDO) "Ludo" else "Snakes & Ladders" }, { type = it })
-                ChoiceRow(PlayMode.entries, mode, {
-                    if (it == PlayMode.VS_COMPUTER) "Vs Computer" else "Pass & Play"
-                }, ::applyMode)
-            }
-
-            if (type == GameType.LUDO) {
-                SectionCard(stringResource(R.string.board_and_variant)) {
-                    ChoiceRow(BoardTopology.entries, board, { if (it == BoardTopology.CLASSIC_4) "Classic 4" else "Hex 6" }, { board = it })
-                    ChoiceRow(Variant.entries, variant, { it.label() }, { variant = it })
-                    when (variant) {
-                        Variant.QUICK -> ChoiceRow(listOf(1, 2), quickTarget, { stringResource(R.string.tokens_to_win, it) }, { quickTarget = it })
-                        Variant.RUSH -> LabeledSwitch(stringResource(R.string.turn_timer), rushTimer, { rushTimer = it })
-                        Variant.TEAM_UP -> Text(stringResource(R.string.team_up_hint), style = MaterialTheme.typography.bodySmall)
-                        else -> Unit
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.setup_title)) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+            )
+        },
+        bottomBar = {
+            Surface(tonalElevation = 3.dp, shadowElevation = 8.dp) {
+                Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 10.dp)) {
+                    if (type == GameType.LUDO && !teamValid) {
+                        Text(stringResource(R.string.team_up_invalid), color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 6.dp))
                     }
+                    Button(
+                        onClick = ::start,
+                        enabled = type == GameType.SNAKES || teamValid,
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        shape = RoundedCornerShape(16.dp),
+                    ) {
+                        Icon(Icons.Filled.PlayArrow, null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.play), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        },
+    ) { pad ->
+        Column(
+            Modifier.fillMaxSize().padding(pad).verticalScroll(rememberScrollState()).padding(horizontal = 14.dp, vertical = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            // --- Top compact controls -------------------------------------------------------------
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                GameType.entries.forEachIndexed { i, g ->
+                    SegmentedButton(
+                        selected = type == g, onClick = { type = g },
+                        shape = SegmentedButtonDefaults.itemShape(i, GameType.entries.size),
+                    ) { Text(if (g == GameType.LUDO) "Ludo" else stringResource(R.string.snakes_ladders)) }
+                }
+            }
+            if (type == GameType.LUDO) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    BoardTopology.entries.forEach { b ->
+                        Pill(if (b == BoardTopology.CLASSIC_4) "Classic 4" else "Hex 6", board == b) { board = b }
+                    }
+                    Spacer(Modifier.width(6.dp))
+                    Variant.entries.forEach { v -> Pill(v.label(), variant == v) { variant = v } }
+                }
+                when (variant) {
+                    Variant.QUICK -> FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf(1, 2).forEach { n -> Pill(stringResource(R.string.tokens_to_win, n), quickTarget == n) { quickTarget = n } }
+                    }
+                    Variant.RUSH -> LabeledSwitch(stringResource(R.string.turn_timer), rushTimer, { rushTimer = it })
+                    Variant.TEAM_UP -> Text(stringResource(R.string.team_up_hint), style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    else -> Unit
                 }
             } else {
-                SectionCard(stringResource(R.string.layout)) {
-                    ChoiceRow(SnlLayouts.ALL, snlLayout, { it.displayName }, { snlLayout = it })
-                    LabeledSwitch(stringResource(R.string.exact_finish), snlExact, { snlExact = it })
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    SnlLayouts.ALL.forEach { l -> Pill(l.displayName, snlLayout == l) { snlLayout = l } }
                 }
             }
-
-            SectionCard(stringResource(R.string.players)) {
-                ChoiceRow((2..maxPlayers).toList(), count, { it.toString() }, { count = it })
-                for (i in 0 until count) PlayerEditor(rows[i], i, type == GameType.LUDO)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                (2..maxPlayers).forEach { n -> Pill("${n}P", count == n) { count = n } }
             }
 
-            if (type == GameType.LUDO) {
-                SectionCard(stringResource(R.string.rules)) {
-                    LabeledSwitch(stringResource(R.string.rule_fortress), fortress, { fortress = it }, stringResource(R.string.rule_fortress_desc))
-                    LabeledSwitch(stringResource(R.string.rule_triple_six), tripleSix, { tripleSix = it })
-                    LabeledSwitch(stringResource(R.string.rule_all_places), allPlacements, { allPlacements = it })
-                    LabeledSwitch(stringResource(R.string.rule_undo), undo, { undo = it }, stringResource(R.string.rule_undo_desc),
-                        enabled = rows.take(count).all { it.kind == PlayerKind.HUMAN })
-                }
-            }
-
-            SectionCard(stringResource(R.string.theme)) {
-                ChoiceRow(BoardThemes.ALL.map { it.id }, themeId, { id -> BoardThemes.byId(id).name }, onThemeChange)
-            }
-
-            if (!teamValid) Text(stringResource(R.string.team_up_invalid), color = MaterialTheme.colorScheme.error)
-            Button(
-                onClick = {
-                    val specs = rows.take(count).mapIndexed { i, r ->
-                        PlayerSpec(r.name.ifBlank { "P${i + 1}" }, r.kind, if (r.kind == PlayerKind.BOT) r.tier else null, r.color,
-                            profileId = if (i == 0 && r.kind == PlayerKind.HUMAN) profileId else null)
+            // --- Inline roster ------------------------------------------------------------------
+            Card(
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+            ) {
+                Column(Modifier.padding(vertical = 4.dp)) {
+                    for (i in 0 until count) {
+                        RosterRow(rows[i], i, ludo = type == GameType.LUDO, onToggle = { toggleKind(i) }, onColor = { cycleColor(i) })
+                        if (i < count - 1) HorizontalDivider(Modifier.padding(horizontal = 12.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                     }
-                    if (type == GameType.SNAKES) {
-                        onStart(SetupResult.Snakes(SnakesAndLaddersEngine.newGame(snlLayout, specs, SnlRules(exactFinish = snlExact))))
+                }
+            }
+
+            // --- House rules & theme (folded) ----------------------------------------------------
+            Row(
+                Modifier.fillMaxWidth().clickable { rulesOpen = !rulesOpen }.padding(vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(stringResource(R.string.rules_and_theme), style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                Icon(if (rulesOpen) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown, null)
+            }
+            AnimatedVisibility(rulesOpen) {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (type == GameType.LUDO) {
+                        LabeledSwitch(stringResource(R.string.rule_fortress), fortress, { fortress = it }, stringResource(R.string.rule_fortress_desc))
+                        LabeledSwitch(stringResource(R.string.rule_triple_six), tripleSix, { tripleSix = it })
+                        LabeledSwitch(stringResource(R.string.rule_all_places), allPlacements, { allPlacements = it })
+                        LabeledSwitch(stringResource(R.string.rule_undo), undo, { undo = it }, stringResource(R.string.rule_undo_desc), enabled = allHuman)
                     } else {
-                        val base = when (variant) {
-                            Variant.CLASSIC -> RuleSet.classic()
-                            Variant.QUICK -> RuleSet.quick(quickTarget)
-                            Variant.RUSH -> RuleSet.rush(if (rushTimer) 10 else 0)
-                            Variant.TEAM_UP -> RuleSet.teamUp()
-                        }
-                        val rules = base.copy(fortressEnabled = fortress, tripleSixForfeit = tripleSix, playForAllPlacements = allPlacements)
-                        val allHuman = specs.all { it.kind == PlayerKind.HUMAN }
-                        onStart(SetupResult.Ludo(MatchConfig.create(board, rules, specs), undo && allHuman, variant == Variant.RUSH))
+                        LabeledSwitch(stringResource(R.string.exact_finish), snlExact, { snlExact = it })
                     }
-                },
-                enabled = type == GameType.SNAKES || teamValid,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-            ) { Text(stringResource(R.string.start_match), style = MaterialTheme.typography.titleMedium) }
-            Spacer(Modifier.height(24.dp))
+                    Text(stringResource(R.string.theme), style = MaterialTheme.typography.labelLarge)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        BoardThemes.ALL.forEach { t -> Pill(t.name, themeId == t.id) { onThemeChange(t.id) } }
+                    }
+                }
+            }
+            Spacer(Modifier.height(8.dp))
         }
     }
+}
+
+@Composable
+private fun Pill(text: String, selected: Boolean, onClick: () -> Unit) {
+    FilterChip(selected = selected, onClick = onClick, label = { Text(text) })
 }
 
 @Composable
@@ -214,32 +302,65 @@ private fun Variant.label(): String = when (this) {
     Variant.TEAM_UP -> stringResource(R.string.variant_team)
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun PlayerEditor(row: PlayerRow, index: Int, ludo: Boolean) {
+private fun RosterRow(row: PlayerRow, index: Int, ludo: Boolean, onToggle: () -> Unit, onColor: () -> Unit) {
     val theme = LocalBoardTheme.current
     val cb = LocalColorblind.current
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    val color = theme.tokenColor(row.color, cb)
+    val bot = row.kind == PlayerKind.BOT
+    val label = stringResource(R.string.player_n, index + 1)
+    Column(Modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(18.dp).background(theme.tokenColor(row.color, cb), CircleShape))
+            Box(
+                Modifier.size(30.dp).background(color, CircleShape).border(2.dp, Color.White.copy(alpha = 0.85f), CircleShape)
+                    .clickable(onClick = onColor)
+                    .semantics { contentDescription = "$label colour" },
+            )
             Spacer(Modifier.width(10.dp))
-            OutlinedTextField(row.name, { row.name = it.take(16) }, singleLine = true, modifier = Modifier.weight(1f),
-                label = { Text(stringResource(R.string.player_n, index + 1)) })
+            BasicTextField(
+                value = row.name, onValueChange = { row.name = it.take(16) }, singleLine = true,
+                textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                modifier = Modifier.weight(1f).semantics { contentDescription = "$label name" },
+                decorationBox = { inner ->
+                    Column {
+                        inner()
+                        Box(Modifier.fillMaxWidth().padding(top = 4.dp).height(1.dp).background(MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)))
+                    }
+                },
+            )
+            Spacer(Modifier.width(10.dp))
+            OutlinedButton(
+                onClick = onToggle,
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                border = BorderStroke(1.5.dp, if (bot) MaterialTheme.colorScheme.primary else color),
+                modifier = Modifier.height(38.dp).semantics { contentDescription = "$label ${if (bot) "Bot" else "Human"}" },
+            ) {
+                Icon(if (bot) RobotIcon else Icons.Filled.Person, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(if (bot) stringResource(R.string.bot_name) else stringResource(R.string.human))
+            }
         }
-        ChoiceRow(PlayerKind.entries, row.kind, { if (it == PlayerKind.HUMAN) "Human" else "Bot" }, { row.kind = it })
-        if (row.kind == PlayerKind.BOT && ludo) {
-            ChoiceRow(BotTier.entries, row.tier, {
-                when (it) {
-                    BotTier.CASUAL -> "Casual"
-                    BotTier.GRANDMASTER -> "Grandmaster"
-                    BotTier.UNBEATABLE -> "★ Unbeatable"
+        if (bot && ludo) {
+            FlowRow(Modifier.padding(start = 40.dp, top = 2.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                BotTier.entries.forEach { t ->
+                    FilterChip(
+                        selected = row.tier == t, onClick = { row.tier = t },
+                        label = {
+                            Text(when (t) { BotTier.CASUAL -> "Casual"; BotTier.GRANDMASTER -> "Grandmaster"; BotTier.UNBEATABLE -> "★ Unbeatable" },
+                                style = MaterialTheme.typography.labelMedium)
+                        },
+                        modifier = Modifier.height(30.dp),
+                    )
                 }
-            }, { row.tier = it })
+            }
             if (row.tier == BotTier.UNBEATABLE) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.Warning, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text(stringResource(R.string.unbeatable_warning), style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Medium)
+                Row(Modifier.padding(start = 40.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Warning, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text(stringResource(R.string.unbeatable_warning), style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error)
                 }
             }
         }

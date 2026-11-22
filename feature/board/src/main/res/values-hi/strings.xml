@@ -15,4 +15,11 @@
     <string name="done">ठीक है</string>
     <string name="captures_short">%1$d काटे</string>
     <string name="fortresses_short">%1$d किले</string>
+    <string name="paused">रुका हुआ</string>
+    <string name="resume">जारी रखें</string>
+    <string name="exit_match">मैच छोड़ें</string>
+    <string name="settings">सेटिंग्स</string>
+    <string name="audio_studio">ऑडियो स्टूडियो</string>
+    <string name="bot_name">बॉट</string>
+    <string name="save_game">गेम सेव करें</string>
 </resources>

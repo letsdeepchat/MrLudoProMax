@@ -28,4 +28,8 @@
     <string name="rule_undo_desc">Pass &amp; Play with humans only.</string>
     <string name="unbeatable_warning">Not fair dice: this bot picks its own dice roll.</string>
     <string name="start_match">Start match</string>
+    <string name="play">Play</string>
+    <string name="snakes_ladders">Snakes &amp; Ladders</string>
+    <string name="rules_and_theme">House rules &amp; theme</string>
+    <string name="human">Human</string>
 </resources>

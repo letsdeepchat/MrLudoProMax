@@ -20,6 +20,7 @@ import com.ludosovereign.session.SaveRepository
 import com.ludosovereign.session.SessionSettings
 import com.ludosovereign.sound.GameFeedback
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** What the board screen should start: a fresh match or an auto-save/slot to resume. */
@@ -67,7 +68,12 @@ class LudoBoardViewModel(
                     val humanWon = winnerTeam != null && s.game.config.players.indices.any {
                         s.game.config.players[it].kind == PlayerKind.HUMAN && s.game.config.teams[it] == winnerTeam
                     }
-                    feedback.onLudoEvents(s.lastEvents, humanWon)
+                    // Capture / home / fortress cues land when the hopping pawn arrives, not when the move starts.
+                    val t = s.timings
+                    val travel = (if (s.lastEvents.any { it is GameEvent.TokenReleased }) t.exitMs else 0L) + t.hopMs * t.hops(s.lastEvents)
+                    val events = s.lastEvents
+                    if (travel > 0) launch { delay(travel); feedback.onLudoEvents(events, humanWon) }
+                    else feedback.onLudoEvents(events, humanWon)
                 }
             }
         }
@@ -82,6 +88,7 @@ class LudoBoardViewModel(
     fun undo() = session.undo()
     fun saveToSlot(slot: Int) = viewModelScope.launch { saves.copyAutoSaveTo(slot) }
     fun step() = feedback.step()
+    fun setPaused(paused: Boolean) = session.setPaused(paused)
 
     override fun onCleared() { session.stop() }
 

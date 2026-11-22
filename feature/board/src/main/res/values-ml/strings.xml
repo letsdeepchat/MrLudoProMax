@@ -14,4 +14,11 @@
     <string name="done">കഴിഞ്ഞു</string>
     <string name="captures_short">%1$d വെട്ടുകൾ</string>
     <string name="fortresses_short">%1$d കോട്ടകൾ</string>
+    <string name="paused">താൽക്കാലികമായി നിർത്തി</string>
+    <string name="resume">തുടരുക</string>
+    <string name="exit_match">മത്സരത്തിൽ നിന്ന് പുറത്തുകടക്കുക</string>
+    <string name="settings">ക്രമീകരണങ്ങൾ</string>
+    <string name="audio_studio">ഓഡിയോ സ്റ്റുഡിയോ</string>
+    <string name="bot_name">ബോട്ട്</string>
+    <string name="save_game">കളി സേവ് ചെയ്യുക</string>
 </resources>

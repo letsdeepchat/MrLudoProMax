@@ -28,4 +28,8 @@
     <string name="rule_undo_desc">மனிதர்கள் மட்டும் உள்ள பாஸ் &amp; ப்ளே.</string>
     <string name="unbeatable_warning">நியாயமான பகடை அல்ல: இந்த பாட் தன் எண்ணைத் தானே தேர்ந்தெடுக்கும்.</string>
     <string name="start_match">ஆட்டத்தைத் தொடங்கு</string>
+    <string name="play">விளையாடு</string>
+    <string name="snakes_ladders">பாம்பும் ஏணியும்</string>
+    <string name="rules_and_theme">வீட்டு விதிகள் &amp; தீம்</string>
+    <string name="human">மனிதர்</string>
 </resources>

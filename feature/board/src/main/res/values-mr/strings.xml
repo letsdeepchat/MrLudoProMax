@@ -14,4 +14,11 @@
     <string name="done">झाले</string>
     <string name="captures_short">%1$d मारल्या</string>
     <string name="fortresses_short">%1$d किल्ले</string>
+    <string name="paused">थांबवले</string>
+    <string name="resume">पुढे सुरू करा</string>
+    <string name="exit_match">सामन्यातून बाहेर पडा</string>
+    <string name="settings">सेटिंग्ज</string>
+    <string name="audio_studio">ऑडिओ स्टुडिओ</string>
+    <string name="bot_name">बॉट</string>
+    <string name="save_game">खेळ जतन करा</string>
 </resources>

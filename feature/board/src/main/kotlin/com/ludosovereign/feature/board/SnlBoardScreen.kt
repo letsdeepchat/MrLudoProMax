@@ -32,6 +32,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -54,10 +58,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.ludosovereign.data.RoomSaveRepository
 import com.ludosovereign.designsystem.BoardThemes
-import com.ludosovereign.designsystem.IsometricDice3D
+import com.ludosovereign.designsystem.PodDice
 import com.ludosovereign.designsystem.LocalBoardTheme
 import com.ludosovereign.designsystem.LocalColorblind
-import com.ludosovereign.designsystem.drawToken
+import com.ludosovereign.designsystem.drawPin
 import com.ludosovereign.designsystem.tokenColor
 import com.ludosovereign.engine.FairDice
 import com.ludosovereign.engine.PlayerKind
@@ -149,8 +153,14 @@ fun SnlBoardScreen(vm: SnlViewModel, onExit: () -> Unit) {
                     Text(current.name, style = MaterialTheme.typography.titleLarge, color = color, fontWeight = FontWeight.Bold)
                     Text(if (current.kind == PlayerKind.BOT) stringResource(R.string.bot_thinking) else stringResource(R.string.tap_dice))
                 }
-                IsometricDice3D(lastRoll, s.rollingPlayer >= 0, color, Modifier.size(96.dp), enabled = s.awaitingHuman,
-                    contentDescription = stringResource(R.string.dice), onClick = vm::roll)
+                Box(
+                    Modifier.size(64.dp).background(Color.Black.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+                        .border(2.dp, color, RoundedCornerShape(16.dp)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    PodDice(lastRoll, s.rollingPlayer >= 0, Modifier.size(56.dp), enabled = s.awaitingHuman,
+                        accent = theme.accent, contentDescription = stringResource(R.string.dice), onClick = vm::roll)
+                }
             }
         }
     }
@@ -196,10 +206,11 @@ private fun SnlCanvas(game: SnlState, seq: Long, events: List<SnlEvent>, onStep:
         for (cell in 1..layout.size) {
             val (row, col) = layout.gridOf(cell)
             val tl = Offset(col * unit, (layout.side - 1 - row) * unit)
-            val fill = if ((row + col) % 2 == 0) theme.cell else theme.safeCell
+            val alt = if (theme.safeCell == theme.cell) androidx.compose.ui.graphics.lerp(theme.cell, theme.accent, 0.22f) else theme.safeCell
+            val fill = if ((row + col) % 2 == 0) theme.cell else alt
             drawRect(fill, tl, Size(unit, unit))
             drawRect(theme.cellBorder.copy(alpha = 0.25f), tl, Size(unit, unit), style = Stroke(1f))
-            drawNumber(measurer, cell.toString(), tl + Offset(unit * 0.08f, unit * 0.04f), theme.onSurface.copy(alpha = 0.55f), unit)
+            drawNumber(measurer, cell.toString(), tl + Offset(unit * 0.08f, unit * 0.04f), theme.cellBorder.copy(alpha = 0.6f), unit)
         }
         layout.ladders.forEach { (b, t) ->
             val a = cellCenter(layout, b, unit); val z = cellCenter(layout, t, unit)
@@ -229,8 +240,8 @@ private fun SnlCanvas(game: SnlState, seq: Long, events: List<SnlEvent>, onStep:
         }
         game.players.forEachIndexed { i, p ->
             val jitter = Offset(((i % 3) - 1) * unit * 0.18f, ((i / 3) - 0.5f) * unit * 0.2f)
-            drawToken(anims[i].value * unit + jitter, unit * 0.22f, theme.tokenColor(p.colorIndex, colorblind),
-                BoardThemes.GLYPHS[i % BoardThemes.GLYPHS.size], highlight = i == game.current)
+            drawPin(anims[i].value * unit + jitter + Offset(0f, unit * 0.18f), unit * 0.2f, theme.tokenColor(p.colorIndex, colorblind),
+                glyph = if (colorblind) BoardThemes.GLYPHS[i % BoardThemes.GLYPHS.size] else null)
         }
     }
 }

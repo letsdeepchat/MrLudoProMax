@@ -28,4 +28,8 @@
     <string name="rule_undo_desc">Solo en partidas locales entre humanos.</string>
     <string name="unbeatable_warning">Dado no justo: este bot elige su propia tirada.</string>
     <string name="start_match">Empezar partida</string>
+    <string name="play">Jugar</string>
+    <string name="snakes_ladders">Serpientes y escaleras</string>
+    <string name="rules_and_theme">Reglas de la casa y tema</string>
+    <string name="human">Humano</string>
 </resources>

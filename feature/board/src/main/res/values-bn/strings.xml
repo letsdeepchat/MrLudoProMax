@@ -14,4 +14,11 @@
     <string name="done">সম্পন্ন</string>
     <string name="captures_short">%1$dটি কাটা</string>
     <string name="fortresses_short">%1$dটি দুর্গ</string>
+    <string name="paused">বিরতি</string>
+    <string name="resume">আবার শুরু</string>
+    <string name="exit_match">ম্যাচ থেকে বেরোন</string>
+    <string name="settings">সেটিংস</string>
+    <string name="audio_studio">অডিও স্টুডিও</string>
+    <string name="bot_name">বট</string>
+    <string name="save_game">খেলা সংরক্ষণ</string>
 </resources>

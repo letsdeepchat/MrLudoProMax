@@ -28,4 +28,8 @@
     <string name="rule_undo_desc">En local entre humains uniquement.</string>
     <string name="unbeatable_warning">Dé non équitable : ce bot choisit son propre lancer.</string>
     <string name="start_match">Lancer la partie</string>
+    <string name="play">Jouer</string>
+    <string name="snakes_ladders">Serpents et échelles</string>
+    <string name="rules_and_theme">Règles maison et thème</string>
+    <string name="human">Humain</string>
 </resources>

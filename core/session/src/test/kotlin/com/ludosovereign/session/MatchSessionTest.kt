@@ -86,6 +86,51 @@ class MatchSessionTest {
         job.cancel()
     }
 
+    @Test fun rapidDiceTapsRollExactlyOnce() = runTest {
+        val cfg = MatchConfig.create(BoardTopology.CLASSIC_4, RuleSet.classic(), listOf(human, human.copy(name = "Friend")))
+        val session = MatchSession(LudoEngine.newGame(cfg), bots = emptyMap(), dice = ScriptedDice(3, 3, 3, 3, 3),
+            aiDispatcher = StandardTestDispatcher(testScheduler))
+        val job = session.start(this)
+        runCurrent()
+        assertEquals(TurnPhase.WAITING_FOR_ROLL, session.ui.value.turnPhase)
+        repeat(6) { session.roll() } // frantic tapping before the session reacts
+        runCurrent()
+        assertEquals(TurnPhase.ROLLING_DICE, session.ui.value.turnPhase)
+        repeat(6) { session.roll() } // tapping during the tumble is ignored outright
+        advanceUntilIdle()
+        // A 3 with everything in base passes the turn: Friend must not inherit the queued taps.
+        assertEquals(1, session.ui.value.game.current)
+        assertEquals(TurnPhase.WAITING_FOR_ROLL, session.ui.value.turnPhase)
+        assertEquals(1, session.log.actions.count { it is com.ludosovereign.engine.GameAction.Roll })
+        job.cancel()
+    }
+
+    @Test fun nextActorWaitsForTheHopAnimation() = runTest {
+        val cfg = MatchConfig.create(BoardTopology.CLASSIC_4, RuleSet.classic(), listOf(human, bot(BotTier.CASUAL)))
+        val tokens = IntArray(8) { BASE }.also { it[0] = 10; it[1] = 20; it[4] = 30 }
+        val settings = SessionSettings()
+        val session = MatchSession(GameState(cfg, tokens, 0, Phase.AWAITING_ROLL),
+            bots = mapOf(1 to BotFactory.create(BotTier.CASUAL, Random(1))), dice = ScriptedDice(4, 2, 2, 2),
+            settings = settings, aiDispatcher = StandardTestDispatcher(testScheduler))
+        val job = session.start(this)
+        runCurrent()
+        session.roll(); advanceUntilIdle()
+        assertEquals(TurnPhase.SELECTING_TOKEN, session.ui.value.turnPhase)
+        session.move(0); runCurrent()
+        val s = session.ui.value
+        assertEquals(TurnPhase.ANIMATING_TOKEN, s.turnPhase)
+        assertEquals(4, s.timings.hops(s.lastEvents), "a 4 is four discrete hops")
+        session.move(1); session.roll(); runCurrent() // taps during the animation are dropped
+        val budget = s.timings.moveDuration(s.lastEvents)
+        testScheduler.advanceTimeBy(budget - 1); runCurrent()
+        assertEquals(TurnPhase.ANIMATING_TOKEN, session.ui.value.turnPhase, "bot must not start mid-hop")
+        assertEquals(0, session.ui.value.rollingPlayer.coerceAtLeast(0))
+        testScheduler.advanceTimeBy(2); runCurrent()
+        assertEquals(1, session.ui.value.game.current)
+        assertEquals(20, session.ui.value.game.tokens[1], "the dropped tap moved nothing")
+        job.cancel()
+    }
+
     @Test fun autoMovePlaysTheOnlyMove() = runTest {
         val cfg = MatchConfig.create(BoardTopology.CLASSIC_4, RuleSet.classic(), listOf(human, bot(BotTier.CASUAL)))
         val tokens = IntArray(8) { BASE }.also { it[0] = 10 }
@@ -107,7 +152,7 @@ class MatchSessionTest {
         val job = session.start(this)
         runCurrent()
         assertEquals(10_000L, session.ui.value.turnDeadlineAtMs)
-        testScheduler.advanceTimeBy(10_001); runCurrent()
+        testScheduler.advanceTimeBy(10_001 + 1_000); runCurrent() // timer, then the dice tumble
         assertEquals(Phase.AWAITING_MOVE, session.ui.value.game.phase, "timer auto-rolled")
         testScheduler.advanceTimeBy(20_000); runCurrent()
         assertEquals(1, session.ui.value.game.current, "timer auto-moved and passed the turn")

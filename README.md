@@ -11,7 +11,7 @@ No ads, no purchases, no `INTERNET` permission, every mode and theme unlocked.
 | `:core:ai` | pure Kotlin | Paranoid Expectimax with alpha-beta + Star1 pruning, additive Zobrist transposition table, iterative deepening under an 80 ms budget. Tiers: Casual, Grandmaster (fair dice), Unbeatable (dice oracle, **not fair dice**) |
 | `:core:session` | pure Kotlin | Match orchestration: bot turns hidden behind the dice animation, auto-move, undo, Rush turn timer, per-action auto-save checkpoints, stats, offline XP/ranks |
 | `:core:audio` | pure Kotlin | Procedural synthesiser: 6 sound packs × 18 events, rendered on device (no audio assets) |
-| Android modules | Android | Room/DataStore, SoundPool + haptics, Compose UI: home, setup, Ludo + hex + Snakes & Ladders boards, audio studio, stats/replay, settings, 8 themes, 12 languages |
+| Android modules | Android | Room/DataStore, SoundPool + haptics, Compose UI: home, setup, Ludo + hex + Snakes & Ladders boards, audio studio, stats/replay, settings, 9 themes, 12 languages |
 
 ## Build & test
 
@@ -30,3 +30,6 @@ Android modules are included automatically when `ANDROID_HOME` or `local.propert
 ```
 
 The release build is debug-signed; swap in a real keystore in `app/build.gradle.kts` before publishing.
+
+CI (`.github/workflows/android.yml`) runs every test and builds the APK on pull requests and `main`.
+Pushing a `v*` tag also publishes the APK as a GitHub Release (notes in `.github/release-notes.md`).
