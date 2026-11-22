@@ -58,6 +58,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.ludosovereign.data.RoomSaveRepository
 import com.ludosovereign.designsystem.BoardThemes
+import com.ludosovereign.designsystem.PaletteCard
+import com.ludosovereign.designsystem.backdropTopBarColors
+import com.ludosovereign.designsystem.darken
+import androidx.compose.foundation.shape.CircleShape
 import com.ludosovereign.designsystem.PodDice
 import com.ludosovereign.designsystem.LocalBoardTheme
 import com.ludosovereign.designsystem.LocalColorblind
@@ -136,30 +140,40 @@ fun SnlBoardScreen(vm: SnlViewModel, onExit: () -> Unit) {
     val color = theme.tokenColor(current.colorIndex, colorblind)
     val lastRoll = s.lastEvents.filterIsInstance<SnlEvent.Rolled>().lastOrNull()?.value ?: 1
 
+    val ui = theme.ui
     Scaffold(
-        containerColor = theme.background,
+        containerColor = Color.Transparent,
+        contentColor = ui.onBackdrop,
         topBar = {
             TopAppBar(
-                title = { Text(game.layout.displayName) },
+                title = { Text(game.layout.displayName, fontWeight = FontWeight.ExtraBold) },
                 navigationIcon = { IconButton(onClick = onExit) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } },
+                colors = backdropTopBarColors(),
             )
         },
     ) { pad ->
-        Column(Modifier.fillMaxSize().padding(pad).padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            SnlCanvas(game, s.eventSeq, s.lastEvents, vm::step, Modifier.fillMaxWidth().weight(1f, fill = false))
+        Column(Modifier.fillMaxSize().padding(pad).padding(horizontal = 4.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            SnlCanvas(game, s.eventSeq, s.lastEvents, vm::step,
+                Modifier.fillMaxWidth().weight(1f, fill = false)
+                    .border(3.dp, theme.frame, RoundedCornerShape(6.dp)).padding(3.dp))
             Spacer(Modifier.height(12.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Column(Modifier.weight(1f)) {
-                    Text(current.name, style = MaterialTheme.typography.titleLarge, color = color, fontWeight = FontWeight.Bold)
-                    Text(if (current.kind == PlayerKind.BOT) stringResource(R.string.bot_thinking) else stringResource(R.string.tap_dice))
-                }
-                Box(
-                    Modifier.size(64.dp).background(Color.Black.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
-                        .border(2.dp, color, RoundedCornerShape(16.dp)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    PodDice(lastRoll, s.rollingPlayer >= 0, Modifier.size(56.dp), enabled = s.awaitingHuman,
-                        accent = theme.accent, contentDescription = stringResource(R.string.dice), onClick = vm::roll)
+            PaletteCard(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
+                Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Box(Modifier.size(14.dp).background(color, CircleShape).border(2.dp, color.darken(0.35f), CircleShape))
+                    Column(Modifier.weight(1f)) {
+                        Text(current.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
+                        Text(if (current.kind == PlayerKind.BOT) stringResource(R.string.bot_thinking) else stringResource(R.string.tap_dice),
+                            color = ui.onCard.copy(alpha = 0.75f))
+                    }
+                    Box(
+                        Modifier.size(64.dp)
+                            .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.4f), Color.Black.copy(alpha = 0.2f))), RoundedCornerShape(16.dp))
+                            .border(2.dp, color, RoundedCornerShape(16.dp)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        PodDice(lastRoll, s.rollingPlayer >= 0, Modifier.size(56.dp), enabled = s.awaitingHuman,
+                            accent = theme.accent, contentDescription = stringResource(R.string.dice), onClick = vm::roll)
+                    }
                 }
             }
         }

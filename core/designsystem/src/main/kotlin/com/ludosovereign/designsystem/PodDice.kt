@@ -3,12 +3,14 @@ package com.ludosovereign.designsystem
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -90,13 +92,17 @@ fun PodDice(
         pulse.snapTo(1f); pulse.animateTo(0f, tween(420))
     }
 
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val press by animateFloatAsState(if (pressed) 1f else 0f, spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessHigh), label = "press")
     Canvas(
         modifier
             .semantics { this.contentDescription = "$contentDescription $value"; role = Role.Button }
-            .clickable(enabled = enabled, interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick)
+            .clickable(enabled = enabled, interactionSource = interaction, indication = null, onClick = onClick)
             .graphicsLayer {
                 rotationX = rx.value; rotationY = ry.value; rotationZ = rz.value
-                scaleX = scale.value; scaleY = scale.value
+                val k = scale.value * (1f - 0.1f * press)
+                scaleX = k; scaleY = k
                 cameraDistance = 12f * density
                 alpha = if (dimmed) 0.45f else 1f
             },

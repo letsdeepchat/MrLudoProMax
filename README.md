@@ -26,8 +26,12 @@ Android modules are included automatically when `ANDROID_HOME` or `local.propert
 ```bash
 ./gradlew :app:assembleRelease        # R8-minified APK (~1.6 MB), debug-signed so it installs for testing
 ./gradlew :app:testDebugUnitTest      # Robolectric smoke test: walks every screen, lets bots play,
-                                      # writes screenshots to app/build/screens/
+                                      # writes screenshots to app/build/screens/; ShowcaseTest renders
+                                      # set-piece boards and the home screen in every theme there too
 ```
+
+Each theme carries a `UiPalette` (backdrop gradient, cards, pills, call-to-action) separate from its
+board colours; `ThemeContrastTest` fails the build if any theme's menu text or buttons lose contrast.
 
 The release build is debug-signed; swap in a real keystore in `app/build.gradle.kts` before publishing.
 

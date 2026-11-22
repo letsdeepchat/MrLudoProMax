@@ -47,4 +47,7 @@ class GameFeedback(private val sound: SoundEngine, private val haptics: HapticCo
     fun step() = sound.play(SoundEvent.STEP).also { haptics.perform(SoundEvent.STEP) }
     fun diceTumble() = sound.play(SoundEvent.DICE_ROLL)
     fun tap() = play(SoundEvent.UI_TAP)
+
+    /** Haptic-only touch acknowledgement for dice and pawn taps; the sound mix stays unchanged. */
+    fun touch() = haptics.perform(SoundEvent.UI_TAP)
 }
