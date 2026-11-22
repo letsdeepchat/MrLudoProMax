@@ -32,4 +32,4 @@ Android modules are included automatically when `ANDROID_HOME` or `local.propert
 The release build is debug-signed; swap in a real keystore in `app/build.gradle.kts` before publishing.
 
 CI (`.github/workflows/android.yml`) runs every test and builds the APK on pull requests and `main`.
-Pushing a `v*` tag also publishes the APK as a GitHub Release (notes in `.github/release-notes.md`).
+Every push to `main` (a merged PR) publishes the APK as the GitHub Release `v<versionName>` (notes in `.github/release-notes.md`).

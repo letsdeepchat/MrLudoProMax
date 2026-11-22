@@ -41,7 +41,9 @@ jobs:
 
       - name: Name the APK
         run: |
-          NAME="LudoSovereign-${GITHUB_REF_NAME//\//-}.apk"
+          VERSION=$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' app/build.gradle.kts)
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          NAME="LudoSovereign-$VERSION.apk"
           cp app/build/outputs/apk/release/app-release.apk "$NAME"
           echo "APK_NAME=$NAME" >> "$GITHUB_ENV"
 
@@ -57,9 +59,14 @@ jobs:
           path: app/build/screens/
           if-no-files-found: ignore
 
+      # Every push to main (e.g. a merged PR) publishes or refreshes the Release for the app's versionName.
       - name: Publish GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ env.VERSION }}
+          name: Ludo Sovereign ${{ env.VERSION }}
+          target_commitish: ${{ github.sha }}
           files: ${{ env.APK_NAME }}
           body_path: .github/release-notes.md
+          make_latest: true
