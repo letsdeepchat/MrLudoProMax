@@ -48,7 +48,7 @@ data class SessionSettings(
     val rollMs get() = if (fastAnimations) rollAnimationMs / 2 else rollAnimationMs
     val moveMs get() = if (fastAnimations) moveAnimationMs / 2 else moveAnimationMs
     val timings: AnimationTimings
-        get() = AnimationTimings().scaled((if (fastAnimations) 0.6f else 1f) / animationSpeed.coerceIn(0.25f, 4f))
+        get() = AnimationTimings().scaled((if (fastAnimations) 0.6f else 1f) * AnimationTimings.factorFor(animationSpeed))
 }
 
 data class LudoUiState(
@@ -86,7 +86,7 @@ class MatchSession(
     initialStats: MatchStats = MatchStats.empty(initial.config),
     private val bots: Map<Int, LudoBot>,
     private val dice: DiceSource,
-    private val settings: SessionSettings = SessionSettings(),
+    private var settings: SessionSettings = SessionSettings(),
     private val aiDispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val clock: () -> Long = System::currentTimeMillis,
     private val onCheckpoint: suspend (Checkpoint) -> Unit = {},
@@ -125,6 +125,13 @@ class MatchSession(
     fun move(tokenId: Int) { if (acceptsHuman(TurnPhase.SELECTING_TOKEN)) intents.trySend(Intent.Move(tokenId)) }
     fun undo() { if (_ui.value.awaitingHuman) intents.trySend(Intent.Undo) }
     fun setPaused(value: Boolean) { pausedFlow.value = value; _ui.update { it.copy(paused = value) } }
+
+    /** Applies a new user animation speed immediately, including to a match already in progress. */
+    fun setAnimationSpeed(speed: Float) {
+        if (speed == settings.animationSpeed) return
+        settings = settings.copy(animationSpeed = speed)
+        _ui.update { it.copy(timings = t) }
+    }
 
     /** Turns the Auto-Bot on or off for one human player; takes effect on the current or next decision. */
     fun toggleAuto(player: Int) {

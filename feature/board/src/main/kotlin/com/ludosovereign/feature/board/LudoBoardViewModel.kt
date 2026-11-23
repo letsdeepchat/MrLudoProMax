@@ -92,6 +92,7 @@ class LudoBoardViewModel(
     fun setPaused(paused: Boolean) = session.setPaused(paused)
     fun toggleAuto(player: Int) { feedback.tap(); session.toggleAuto(player) }
     fun endNow() = session.endNow()
+    fun setAnimationSpeed(speed: Float) = session.setAnimationSpeed(speed)
 
     override fun onCleared() { session.stop() }
 

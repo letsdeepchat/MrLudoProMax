@@ -16,7 +16,9 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.assertIsDisplayed
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import androidx.compose.ui.test.getBoundsInRoot
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -179,8 +181,14 @@ class AppSmokeTest {
         settle(800)
         shot("13_board_2p_dark")
         // Step away: the Auto-Bot plays our turns, then hand control back.
+        val board = hasContentDescription("Ludo board", substring = true)
+        val before = rule.onNode(board).getBoundsInRoot()
         rule.onNodeWithContentDescription("Auto-Bot for Player off").performClick()
-        settle(6_000)
+        repeat(12) {
+            settle(500)
+            // Pods expand and shrink as turns change, but the board never moves.
+            assertEquals(before, rule.onNode(board).getBoundsInRoot())
+        }
         rule.onNodeWithContentDescription("Auto-Bot for Player on").assertExists()
         shot("16_auto_bot_on")
         rule.onNodeWithContentDescription("Auto-Bot for Player on").performClick()

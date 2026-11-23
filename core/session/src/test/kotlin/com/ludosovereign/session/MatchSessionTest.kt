@@ -251,6 +251,31 @@ class MatchSessionTest {
         job.cancel()
     }
 
+    @Test fun animationSpeedCurve() {
+        assertEquals(425f, AnimationTimings.hopMsFor(0.5f))
+        assertEquals(235f, AnimationTimings.hopMsFor(1f))
+        assertEquals(90f, AnimationTimings.hopMsFor(2f))
+        assertEquals(1f, AnimationTimings.speedForSlider(0.5f), "slider middle is ×1.0")
+        for (p in listOf(0f, 0.25f, 0.5f, 0.8f, 1f)) assertEquals(p, AnimationTimings.sliderForSpeed(AnimationTimings.speedForSlider(p)), 1e-5f)
+        val slow = SessionSettings(animationSpeed = 0.5f).timings
+        val fast = SessionSettings(animationSpeed = 2f).timings
+        assertEquals(425L, slow.hopMs)
+        assertEquals(90L, fast.hopMs)
+        assertTrue(slow.exitMs > fast.exitMs && slow.retreatMs > fast.retreatMs && slow.rollMs > fast.rollMs)
+    }
+
+    @Test fun speedChangeAppliesToRunningMatch() = runTest {
+        val cfg = MatchConfig.create(BoardTopology.CLASSIC_4, RuleSet.classic(), listOf(human, human.copy(name = "Friend")))
+        val session = MatchSession(LudoEngine.newGame(cfg), bots = emptyMap(), dice = ScriptedDice(3),
+            aiDispatcher = StandardTestDispatcher(testScheduler))
+        val job = session.start(this)
+        runCurrent()
+        assertEquals(235L, session.ui.value.timings.hopMs)
+        session.setAnimationSpeed(0.5f)
+        assertEquals(425L, session.ui.value.timings.hopMs)
+        job.cancel()
+    }
+
     @Test fun podiumTitles() {
         assertEquals(listOf("Ultra", "Pro", "Max", "Aspirant", "Aspirant"), (1..5).map(Podium::title))
     }

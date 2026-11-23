@@ -41,6 +41,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ludosovereign.session.AnimationTimings.Companion.sliderForSpeed
+import com.ludosovereign.session.AnimationTimings.Companion.speedForSlider
 import com.ludosovereign.data.SaveSlot
 import com.ludosovereign.designsystem.BoardThemes
 import com.ludosovereign.designsystem.LocalBoardTheme
@@ -252,8 +254,8 @@ fun SettingsScreen(
             }
             com.ludosovereign.designsystem.SectionCard(stringResource(R.string.gameplay)) {
                 com.ludosovereign.designsystem.LabeledSwitch(stringResource(R.string.auto_move), autoMove, onAutoMove, stringResource(R.string.auto_move_desc))
-                com.ludosovereign.designsystem.LabeledSlider(stringResource(R.string.animation_speed), (animationSpeed - 0.5f) / 1.5f,
-                    { onAnimationSpeed(0.5f + it * 1.5f) }, "×%.1f".format(animationSpeed))
+                com.ludosovereign.designsystem.LabeledSlider(stringResource(R.string.animation_speed), sliderForSpeed(animationSpeed),
+                    { onAnimationSpeed(speedForSlider(it)) }, "×%.1f".format(animationSpeed))
             }
             com.ludosovereign.designsystem.SectionCard(stringResource(R.string.language)) {
                 com.ludosovereign.designsystem.ChoiceRow(LANGUAGES.map { it.first }, language,

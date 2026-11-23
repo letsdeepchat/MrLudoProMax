@@ -104,10 +104,9 @@ import kotlin.random.Random
  * cell, home-stretch cell and Home point in board units; this adds the view rotation that puts
  * seat 0 in the top-left yard (cross board) or yards above/below the hexagon (hex board).
  *
- * On the cross board it also re-weights the 15×15 grid: the three centre lanes are
- * [LANE_WEIGHT]× as wide as a yard column (a ~5.4 : 4.2 : 5.4 split instead of 6 : 3 : 6), so
- * every road tile grows across the lane while the corner yards give up the space. The grid logic
- * is unchanged; only the drawing is weighted.
+ * The cross board can re-weight the 15×15 grid ([LANE_WEIGHT]); it is 1, so every road tile is a
+ * true square, the centre Home box stays a compact 3×3 tiles and the yards sit flush with the
+ * track. The yards still give space back through a slim bezel and wider-spread wells.
  */
 @Stable
 class BoardView(val geo: BoardGeometry) {
@@ -179,10 +178,10 @@ class BoardView(val geo: BoardGeometry) {
 
     companion object {
         /** Centre-lane width relative to a yard column on the cross board (1 = classic square grid). */
-        const val LANE_WEIGHT = 1.5556f
+        const val LANE_WEIGHT = 1.0f
 
         /** Distance (board units, along each axis) from a cross-board yard centre to each well. */
-        const val WELL_SPREAD = 1.12f
+        const val WELL_SPREAD = 1.2f
 
         /** Thickness of the coloured yard bezel, as a fraction of an outer grid column. */
         const val BEZEL = 0.55f
@@ -191,7 +190,7 @@ class BoardView(val geo: BoardGeometry) {
         const val FRAME = 0.08f
 
         /** Pin head radius as a fraction of [tile]: a lone pawn spans ~80% of a tile and stands ~1.2 tiles tall. */
-        const val PIN_R = 0.38f
+        const val PIN_R = 0.41f
 
         /** How far below a tile's centre a pawn's tip touches down, as a fraction of [tile]. */
         const val TIP_DROP = 0.28f

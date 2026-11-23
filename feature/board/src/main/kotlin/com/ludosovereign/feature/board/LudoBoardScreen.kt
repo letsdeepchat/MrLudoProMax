@@ -202,8 +202,11 @@ private fun PodRow(seats: List<Int>, s: LudoUiState, view: BoardView, top: Boole
 @Composable
 private fun PodRowLtr(seats: List<Int>, s: LudoUiState, view: BoardView, top: Boolean, onRoll: () -> Unit) {
     val game = s.game
+    // The row always reserves the height of a fully expanded pod, so pods grow and shrink inside
+    // it and the board below/above never moves when the turn changes.
+    val rowHeight = if (seats.size > 2) 108.dp else 78.dp
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+        Modifier.fillMaxWidth().height(rowHeight).padding(horizontal = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = if (top) Alignment.Bottom else Alignment.Top,
     ) {
