@@ -28,6 +28,10 @@ import com.ludosovereign.engine.PlayerKind
 import com.ludosovereign.engine.PlayerSpec
 import com.ludosovereign.engine.RuleSet
 import com.ludosovereign.feature.board.BoardCanvas
+import com.ludosovereign.feature.board.MatchSummary
+import com.ludosovereign.session.MatchResult
+import com.ludosovereign.session.MatchStats
+import com.ludosovereign.session.PlayerMatchStats
 import com.ludosovereign.feature.home.HomeScreen
 import com.ludosovereign.session.AnimationTimings
 import com.ludosovereign.session.GameKind
@@ -120,6 +124,49 @@ class ShowcaseTest {
         theme = BoardThemes.CLASSIC_ROYAL
         game = hexShowcase()
         shot("21_hex_classic_royal")
+    }
+
+    /** 3P: Red finished (Ultra), Green mid-race with the Auto-Bot on, the unused seat shows × wells. */
+    private fun threePlayerPodium(): GameState {
+        val cfg = MatchConfig.create(BoardTopology.CLASSIC_4, RuleSet.classic().copy(playForAllPlacements = true), players(3))
+        val h = BoardTopology.CLASSIC_4.homeProgress
+        val tokens = intArrayOf(
+            h, h, h, h,
+            30, 52, 8, BASE,
+            15, 21, BASE, h,
+        )
+        return GameState(cfg, tokens, current = 1, phase = Phase.AWAITING_ROLL, finishOrder = intArrayOf(0))
+    }
+
+    @Test fun podiumAutoBotAndSummary() {
+        val game = threePlayerPodium()
+        show {
+            LudoSovereignTheme(BoardThemes.CLASSIC_ROYAL, colorblind = false) {
+                Column(Modifier.fillMaxSize().systemBarsPadding(), verticalArrangement = Arrangement.Center) {
+                    BoardCanvas(
+                        game = game, events = emptyList(), eventSeq = 0, selectable = emptySet(), activeSeat = game.seatOf(1),
+                        timings = AnimationTimings(), onTokenTap = {}, onHop = {},
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                        autoPlayers = setOf(1), onAutoToggle = {},
+                    )
+                }
+            }
+        }
+        shot("23_board_3p_podium_auto")
+
+        val stats = MatchStats(listOf(
+            PlayerMatchStats(rolls = 60, sixes = 11, captures = 4, timesCaptured = 1, safeLandings = 9, bonusTurns = 15, missedCuts = 1, decisions = 22, accuracySum = 19.6),
+            PlayerMatchStats(rolls = 64, sixes = 9, captures = 2, timesCaptured = 3, safeLandings = 6, bonusTurns = 11, missedCuts = 3, decisions = 25, accuracySum = 16.9, tripleSixForfeits = 1),
+            PlayerMatchStats(rolls = 66, sixes = 12, captures = 1, timesCaptured = 3, safeLandings = 4, bonusTurns = 13, missedCuts = 4, decisions = 20, accuracySum = 10.8),
+        ))
+        val result = MatchResult(GameKind.LUDO, "CLASSIC", "CLASSIC_4", listOf("P1", "P2", "P3"), listOf(true, true, false),
+            listOf(null, null, null), listOf(0, 2, 1), 0, stats, null, 1L)
+        show {
+            LudoSovereignTheme(BoardThemes.CLASSIC_ROYAL, colorblind = false) {
+                MatchSummary(result, game, onDone = {})
+            }
+        }
+        shot("24_match_summary")
     }
 
     @Test fun homeAcrossThemes() {

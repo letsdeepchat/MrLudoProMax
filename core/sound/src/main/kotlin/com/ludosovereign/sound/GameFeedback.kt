@@ -2,6 +2,7 @@ package com.ludosovereign.sound
 
 import com.ludosovereign.audio.SoundEvent
 import com.ludosovereign.engine.GameEvent
+import com.ludosovereign.engine.GameState
 import com.ludosovereign.engine.snl.SnlEvent
 
 /** Single entry point the screens call with each event batch: picks sounds + haptics. */
@@ -12,13 +13,18 @@ class GameFeedback(private val sound: SoundEngine, private val haptics: HapticCo
         haptics.perform(event)
     }
 
-    fun onLudoEvents(events: List<GameEvent>, humanWon: Boolean) {
+    /**
+     * [state] is the position the events led to (seats never change mid-match); it lets a pawn that
+     * lands on a star or coloured start square play the same safety chime as entering the home lane.
+     */
+    fun onLudoEvents(events: List<GameEvent>, humanWon: Boolean, state: GameState? = null) {
         val cues = LinkedHashSet<SoundEvent>()
         for (e in events) when (e) {
             is GameEvent.DiceRolled -> { cues += SoundEvent.DICE_LAND; if (e.value == 6) cues += SoundEvent.SIX }
             is GameEvent.TripleSixForfeit -> cues += SoundEvent.TRIPLE_SIX
             is GameEvent.TokenReleased -> cues += SoundEvent.RELEASE
             is GameEvent.TokenEnteredHomeStretch -> cues += SoundEvent.HOME_STRETCH
+            is GameEvent.TokenMoved -> if (state != null && landsSafe(state, e)) cues += SoundEvent.HOME_STRETCH
             is GameEvent.TokenReachedHome -> cues += SoundEvent.HOME
             is GameEvent.Captured -> cues += SoundEvent.CAPTURE
             is GameEvent.FortressFormed -> cues += SoundEvent.FORTRESS_LOCK
@@ -31,6 +37,11 @@ class GameFeedback(private val sound: SoundEngine, private val haptics: HapticCo
         if (cues.size > 1) cues.remove(SoundEvent.STEP)
         if (SoundEvent.CAPTURE in cues || SoundEvent.FORTRESS_LOCK in cues) cues.remove(SoundEvent.TURN)
         cues.forEach(::play)
+    }
+
+    private fun landsSafe(s: GameState, e: GameEvent.TokenMoved): Boolean {
+        val cell = s.topology.absoluteCell(s.seatOf(s.ownerOf(e.tokenId)), e.toProgress)
+        return cell >= 0 && s.topology.isSafeCell(cell)
     }
 
     fun onSnlEvents(events: List<SnlEvent>) {

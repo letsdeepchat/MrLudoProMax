@@ -43,13 +43,13 @@ jobs:
         run: |
           VERSION=$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' app/build.gradle.kts)
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          NAME="LudoSovereign-$VERSION.apk"
+          NAME="LudoUltraProMax-$VERSION.apk"
           cp app/build/outputs/apk/release/app-release.apk "$NAME"
           echo "APK_NAME=$NAME" >> "$GITHUB_ENV"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ludo-sovereign-apk
+          name: ludo-ultra-pro-max-apk
           path: ${{ env.APK_NAME }}
 
       - uses: actions/upload-artifact@v4
@@ -65,7 +65,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.VERSION }}
-          name: Ludo Sovereign ${{ env.VERSION }}
+          name: Ludo Ultra Pro-Max ${{ env.VERSION }}
           target_commitish: ${{ github.sha }}
           files: ${{ env.APK_NAME }}
           body_path: .github/release-notes.md

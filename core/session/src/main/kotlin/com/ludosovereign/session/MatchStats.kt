@@ -15,7 +15,20 @@ data class PlayerMatchStats(
     val fortressesBuilt: Int = 0,
     val fortressStandoffs: Int = 0,
     val tokensHome: Int = 0,
-)
+    /** Landings on a safe square (star or coloured start square) by a moved token. */
+    val safeLandings: Int = 0,
+    val bonusTurns: Int = 0,
+    val tripleSixForfeits: Int = 0,
+    /** Turns with a capturing move available where another move was played. */
+    val missedCuts: Int = 0,
+    /** Turns with 2+ distinct legal moves (the ones accuracy is measured on). */
+    val decisions: Int = 0,
+    /** Sum over [decisions] of how close the chosen move was to the engine's top move (0..1 each). */
+    val accuracySum: Double = 0.0,
+) {
+    /** Accuracy in percent, or null when the player never had a real choice. */
+    val accuracyPercent: Int? get() = if (decisions == 0) null else Math.round(accuracySum * 100.0 / decisions).toInt()
+}
 
 @Serializable
 data class MatchStats(val players: List<PlayerMatchStats>) {
@@ -27,13 +40,30 @@ data class MatchStats(val players: List<PlayerMatchStats>) {
      * Folds a batch of events. [before] is the state the batch was produced from; it resolves token
      * owners and which player built a Fortress.
      */
+    /** Records one decision turn of [player]: its accuracy (0..1) and whether a capture was passed up. */
+    fun recordDecision(player: Int, accuracy: Double, missedCut: Boolean): MatchStats {
+        val p = players.toMutableList()
+        p[player] = p[player].let {
+            it.copy(decisions = it.decisions + 1, accuracySum = it.accuracySum + accuracy.coerceIn(0.0, 1.0),
+                missedCuts = it.missedCuts + if (missedCut) 1 else 0)
+        }
+        return MatchStats(p)
+    }
+
     fun fold(before: GameState, events: List<GameEvent>): MatchStats {
         val p = players.toMutableList()
         fun upd(i: Int, f: (PlayerMatchStats) -> PlayerMatchStats) { p[i] = f(p[i]) }
         var lastMover = before.current
         for (e in events) when (e) {
             is GameEvent.DiceRolled -> upd(e.player) { it.copy(rolls = it.rolls + 1, sixes = it.sixes + if (e.value == 6) 1 else 0) }
-            is GameEvent.TokenMoved -> lastMover = before.ownerOf(e.tokenId)
+            is GameEvent.TokenMoved -> {
+                lastMover = before.ownerOf(e.tokenId)
+                if (before.topology.isSafeCell(before.topology.absoluteCell(before.seatOf(lastMover), e.toProgress))) {
+                    upd(lastMover) { it.copy(safeLandings = it.safeLandings + 1) }
+                }
+            }
+            is GameEvent.BonusTurn -> upd(e.player) { it.copy(bonusTurns = it.bonusTurns + 1) }
+            is GameEvent.TripleSixForfeit -> upd(e.player) { it.copy(tripleSixForfeits = it.tripleSixForfeits + 1) }
             is GameEvent.TokenReleased -> lastMover = before.ownerOf(e.tokenId)
             is GameEvent.Captured -> {
                 upd(before.ownerOf(e.byTokenId)) { it.copy(captures = it.captures + 1) }
@@ -50,8 +80,9 @@ data class MatchStats(val players: List<PlayerMatchStats>) {
 
 /** Offline XP and rank badges. Purely local; nothing is ever uploaded. */
 object Progression {
-    enum class Rank(val minXp: Int) {
-        PAWN(0), SQUIRE(300), KNIGHT(900), BARON(2000), DUKE(4000), MONARCH(7500), SOVEREIGN(12000);
+    enum class Rank(val minXp: Int, val title: String) {
+        PAWN(0, "Pawn"), SQUIRE(300, "Squire"), KNIGHT(900, "Knight"), BARON(2000, "Baron"), DUKE(4000, "Duke"),
+        MONARCH(7500, "Monarch"), PRO_MAX(12000, "Pro-Max");
     }
 
     fun xpFor(stats: PlayerMatchStats, place: Int, playerCount: Int): Int {

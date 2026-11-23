@@ -97,7 +97,7 @@ class MainActivity : ComponentActivity() {
                 HomeScreen(
                     slots = slots,
                     profileName = activeProfile?.name ?: defaultName,
-                    rankName = Progression.rankFor(activeProfile?.xp ?: 0).name.lowercase().replaceFirstChar { it.uppercase() },
+                    rankName = Progression.rankFor(activeProfile?.xp ?: 0).title,
                     onResume = { slot ->
                         scope.launch {
                             val cp = c.saves.load(slot) ?: return@launch
@@ -144,6 +144,8 @@ class MainActivity : ComponentActivity() {
                 val vm: LudoBoardViewModel = viewModel(
                     factory = LudoBoardViewModel.Factory(launch, sessionSettings(fastForMatch, undoForMatch), c.saves, c.history, c.feedback),
                 )
+                // The Settings slider applies live, even mid-match (Settings opens on top of the board).
+                LaunchedEffect(settings.animationSpeed) { vm.setAnimationSpeed(settings.animationSpeed) }
                 LudoBoardScreen(vm, undoForMatch, onExit = { nav.popBackStack("home", inclusive = false) },
                     onAudio = { nav.navigate("audio") }, onSettings = { nav.navigate("settings") })
             }

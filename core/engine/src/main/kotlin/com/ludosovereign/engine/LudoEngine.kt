@@ -239,6 +239,18 @@ object LudoEngine {
         return if (remaining <= 1) cfg.teams[state.finishOrder[0]] else -1
     }
 
+    /**
+     * Ends the match right now (players chose to stop after the first finisher): unfinished players
+     * are ranked by total progress, and the first finisher's team wins.
+     */
+    fun endNow(state: GameState, events: MutableList<GameEvent>? = null): GameState {
+        if (state.phase == Phase.GAME_OVER) return state
+        val order = completeOrder(state)
+        val winner = state.config.teams[order[0]]
+        events?.add(GameEvent.GameOver(winner, order.toList()))
+        return state.copy(phase = Phase.GAME_OVER, winnerTeam = winner, finishOrder = order, dice = 0)
+    }
+
     /** Appends unfinished players ranked by total progress so the final standings are complete. */
     private fun completeOrder(state: GameState): IntArray {
         val rest = (0 until state.config.playerCount)

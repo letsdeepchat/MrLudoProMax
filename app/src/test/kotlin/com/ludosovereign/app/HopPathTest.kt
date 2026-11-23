@@ -34,7 +34,7 @@ class HopPathTest {
         val events = listOf(GameEvent.DiceRolled(0, 4), GameEvent.TokenMoved(0, 10, 14))
         assertEquals(4, t.hops(events))
         assertTrue(t.moveDuration(events) >= 4 * t.hopMs)
-        assertTrue("hop length within 115–135 ms", t.hopMs in 115..135)
+        assertTrue("default hop length within 220–250 ms (classic pace)", t.hopMs in 220..250)
         assertTrue("roll length within 350–420 ms", t.rollMs in 350..420)
     }
 }

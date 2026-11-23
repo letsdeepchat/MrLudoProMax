@@ -138,7 +138,7 @@ object BoardThemes {
             AMBER_CTA, 0xFF7A5A12, 0xFFFFFFFF),
     )
     val MIDNIGHT_SOVEREIGN = BoardTheme(
-        "midnight_sovereign", "Midnight Sovereign", true,
+        "midnight_sovereign", "Midnight Royale", true,
         background = Color(0xFF0E1117), surface = Color(0xFF171C26), boardBase = Color(0xFF1D2433),
         cell = Color(0xFF263045), cellBorder = Color(0xFF3E4A66), safeCell = Color(0xFF4A3F1E),
         center = Color(0xFF2E2A1A), accent = Color(0xFFFFC94D), onSurface = Color(0xFFE9ECF2),

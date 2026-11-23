@@ -127,17 +127,21 @@ private fun DrawScope.drawDieFace(n: Int, body: Color, pip: Color, accent: Color
         tl + Offset(inset, inset), Size(s - 2 * inset, s - 2 * inset), CornerRadius(s * 0.16f),
     )
     drawRoundRect(Color.Black.copy(alpha = 0.35f), tl, Size(s, s), corner, style = Stroke(s * 0.025f))
-    // Recessed pips: dark well with a light lower-right rim.
-    val pr = s * 0.085f
-    val step = s * 0.25f
+    // Bold recessed pips: a crisp dark well with a light lower-right rim. Face 1 gets one large
+    // crimson pip so it never reads as tiny or faint.
+    val single = n.coerceIn(1, 6) == 1
+    val pr = if (single) s * 0.17f else s * 0.105f
+    val step = s * 0.26f
     val c = tl + Offset(s / 2, s / 2)
+    val ink = if (single) Color(0xFFC62828) else pip
     PIP_LAYOUT.getValue(n.coerceIn(1, 6)).forEach { (a, b) ->
         val p = c + Offset(a * step, b * step)
-        drawCircle(Color.White.copy(alpha = 0.7f), pr * 1.08f, p + Offset(pr * 0.18f, pr * 0.22f))
+        drawCircle(Color.White.copy(alpha = 0.85f), pr * 1.1f, p + Offset(pr * 0.14f, pr * 0.18f))
         drawCircle(
-            Brush.radialGradient(listOf(pip.lighten(0.25f), pip), center = p + Offset(pr * 0.3f, pr * 0.3f), radius = pr * 1.2f),
+            Brush.radialGradient(listOf(ink.lighten(0.3f), ink, ink.darken(0.35f)), center = p - Offset(pr * 0.3f, pr * 0.35f), radius = pr * 1.4f),
             pr, p,
         )
+        drawCircle(ink.darken(0.5f), pr, p, style = Stroke(maxOf(pr * 0.12f, 1f)))
     }
     if (pulse > 0f) {
         drawRoundRect(accent.copy(alpha = 0.9f * pulse), tl - Offset(s * 0.05f, s * 0.05f), Size(s * 1.1f, s * 1.1f),

@@ -48,6 +48,25 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import com.ludosovereign.designsystem.RobotIcon
+import com.ludosovereign.session.Podium
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
@@ -77,6 +96,7 @@ import kotlin.math.min
 import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.sin
+import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
@@ -84,9 +104,9 @@ import kotlin.random.Random
  * cell, home-stretch cell and Home point in board units; this adds the view rotation that puts
  * seat 0 in the top-left yard (cross board) or yards above/below the hexagon (hex board).
  *
- * On the cross board it also re-weights the 15×15 grid: the three centre lanes are
- * [LANE_WEIGHT]× as wide as a yard column, so every road tile grows across the lane while the
- * corner yards give up the space. The grid logic is unchanged; only the drawing is weighted.
+ * The cross board can re-weight the 15×15 grid ([LANE_WEIGHT]); it is 1, so every road tile is a
+ * true square, the centre Home box stays a compact 3×3 tiles and the yards sit flush with the
+ * track. The yards still give space back through a slim bezel and wider-spread wells.
  */
 @Stable
 class BoardView(val geo: BoardGeometry) {
@@ -101,8 +121,8 @@ class BoardView(val geo: BoardGeometry) {
     /** Width of one of the three centre lanes, in board units. */
     val lane: Float = if (cross) outer * LANE_WEIGHT else 1f
 
-    /** A tile's shorter side; pawns and markers scale with it. */
-    val tile: Float = min(outer, lane)
+    /** Size pawns and markers scale with: the geometric mean of a road tile's two sides. */
+    val tile: Float = if (cross) sqrt(outer * lane) else 1f
 
     val extent: Float get() = geo.extent
 
@@ -134,8 +154,23 @@ class BoardView(val geo: BoardGeometry) {
 
     fun yard(seat: Int): Offset = v(geo.yardCenter(seat))
 
+    /**
+     * A yard well. On the cross board the four wells are spread a little wider than the grid
+     * suggests, leaving a clear centre gap for the Auto-Bot / podium badge.
+     */
+    fun yardSlot(seat: Int, localIndex: Int): Offset {
+        val raw = v(geo.yardSlot(seat, localIndex))
+        if (!cross) return raw
+        val c = yard(seat)
+        return c + (raw - c) * (WELL_SPREAD / (0.95f * outer))
+    }
+
+    /** Radius of a yard well, in board units. */
+    val wellRadius: Float = if (cross) 0.48f * tile else 0.42f
+
     /** Exact resting point of a token, before stacking offsets. */
-    fun tokenPoint(seat: Int, progress: Int, localIndex: Int): Offset = v(geo.tokenPoint(seat, progress, localIndex))
+    fun tokenPoint(seat: Int, progress: Int, localIndex: Int): Offset =
+        if (progress == BASE) yardSlot(seat, localIndex) else v(geo.tokenPoint(seat, progress, localIndex))
 
     /** Ordered hop targets [step_1 .. step_N] for a move; empty for releases (they arc instead). */
     fun hopPath(seat: Int, from: Int, to: Int, localIndex: Int): List<Offset> =
@@ -145,11 +180,17 @@ class BoardView(val geo: BoardGeometry) {
         /** Centre-lane width relative to a yard column on the cross board (1 = classic square grid). */
         const val LANE_WEIGHT = 1.0f
 
+        /** Distance (board units, along each axis) from a cross-board yard centre to each well. */
+        const val WELL_SPREAD = 1.2f
+
+        /** Thickness of the coloured yard bezel, as a fraction of an outer grid column. */
+        const val BEZEL = 0.55f
+
         /** Margin around the board for its outline and shadow, in board units. */
         const val FRAME = 0.08f
 
         /** Pin head radius as a fraction of [tile]: a lone pawn spans ~80% of a tile and stands ~1.2 tiles tall. */
-        const val PIN_R = 0.38f
+        const val PIN_R = 0.41f
 
         /** How far below a tile's centre a pawn's tip touches down, as a fraction of [tile]. */
         const val TIP_DROP = 0.28f
@@ -243,6 +284,10 @@ fun BoardCanvas(
     onTokenTap: (Int) -> Unit,
     onHop: () -> Unit,
     modifier: Modifier = Modifier,
+    /** Human players whose turns the Auto-Bot is playing. */
+    autoPlayers: Set<Int> = emptySet(),
+    /** When set, each unfinished human player's yard gets a centre Auto-Bot toggle. */
+    onAutoToggle: ((Int) -> Unit)? = null,
 ) {
     val theme = LocalBoardTheme.current
     val colorblind = LocalColorblind.current
@@ -263,15 +308,18 @@ fun BoardCanvas(
     val tile = view.tile
     val homeProgress = game.topology.homeProgress
     val playerColors = game.config.players.map { theme.tokenColor(it.colorIndex, colorblind) }
+    // Unused seats keep a full, vibrant colour of their own (one no player picked).
+    val idleColorIndex = remember(game.config) { idleSeatColors(game) }
     val seatColor = { seat: Int ->
         val p = game.config.seats.indexOf(seat)
-        if (p >= 0) playerColors[p] else lerp(theme.tokens[seat % theme.tokens.size], Color(0xFFBDBDBD), 0.75f)
+        if (p >= 0) playerColors[p] else theme.tokenColor(idleColorIndex.getValue(seat), colorblind)
     }
     val yardColor = { seat: Int ->
         val p = game.config.seats.indexOf(seat)
         if (p >= 0) theme.yardColor(game.config.players[p].colorIndex, colorblind)
-        else lerp(theme.yardColor(seat, colorblind), Color(0xFFBDBDBD), 0.75f)
+        else theme.yardColor(idleColorIndex.getValue(seat), colorblind)
     }
+    val textMeasurer = rememberTextMeasurer()
     val tap = { id: Int ->
         tapScope.launch { visuals[id].press.snapTo(1f); visuals[id].press.animateTo(0f, spring(0.5f, 700f)) }
         onTokenTap(id)
@@ -408,14 +456,18 @@ fun BoardCanvas(
 
         drawBoard(game, view, theme, unit, ::px, seatColor, yardColor, activeSeat, pulse)
 
+        // Podium badge in the centre of each finished player's yard (Team Up has no individual podium).
+        if (!game.rules.teamUp) game.finishOrder.forEachIndexed { i, player ->
+            drawPodiumBadge(textMeasurer, px(view.yard(game.seatOf(player))), unit * view.tile, i + 1)
+        }
+
         // Finished pawns: a ✓ badge pops into each emptied yard slot.
         for (id in game.tokens.indices) {
             if (game.tokens[id] != homeProgress) continue
             val k = tickPop[id] ?: if (prevTokens[id] != homeProgress) 0f else 1f
             if (k <= 0f) continue
             val seat = game.seatOf(id / tpp)
-            val slotR = unit * (if (view.cross) 0.5f * view.outer else 0.42f)
-            drawTick(px(view.v(view.geo.yardSlot(seat, id % tpp))), slotR * 0.86f * k)
+            drawTick(px(view.yardSlot(seat, id % tpp)), unit * view.wellRadius * 0.86f * k)
         }
 
         // Fortress indicators: gold tile outline + small shield, inside the tile bounds.
@@ -482,6 +534,20 @@ fun BoardCanvas(
     }
     // Accessible, oversized tap targets over each selectable pawn (TalkBack can pick pawns too).
     val unitDp = boxW / (2 * view.span)
+    // Auto-Bot toggles in the centre gap of each unfinished human player's yard.
+    if (onAutoToggle != null) {
+        for (player in game.config.players.indices) {
+            val spec = game.config.players[player]
+            if (spec.kind != com.ludosovereign.engine.PlayerKind.HUMAN || game.hasFinished(player)) continue
+            val c = view.yard(game.seatOf(player))
+            val d = unitDp * (if (view.cross) 0.98f else 0.9f) * view.tile
+            AutoBotToggle(
+                on = player in autoPlayers, pulse = pulse, color = playerColors[player],
+                name = spec.name, onClick = { onAutoToggle(player) },
+                modifier = Modifier.offset(unitDp * (view.span + c.x) - d / 2, unitDp * (view.span + c.y) - d / 2).size(d),
+            )
+        }
+    }
     for (id in selectable) {
         val p = visuals[id].pos
         Box(
@@ -492,6 +558,70 @@ fun BoardCanvas(
                 .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { tap(id) },
         )
     }
+    }
+}
+
+/** Colour index for every seat nobody sits in: its own palette colour when free, else the first unused one. */
+internal fun idleSeatColors(g: GameState): Map<Int, Int> {
+    val used = g.config.players.map { it.colorIndex }.toMutableSet()
+    val out = HashMap<Int, Int>()
+    for (seat in 0 until g.topology.seats) {
+        if (seat in g.config.seats) continue
+        val pick = if (seat !in used) seat else (0 until 6).firstOrNull { it !in used } ?: seat
+        used += pick
+        out[seat] = pick
+    }
+    return out
+}
+
+/** Gold medal with the podium title (Ultra / Pro / Max / Aspirant) in a finished player's yard. */
+private fun DrawScope.drawPodiumBadge(tm: TextMeasurer, c: Offset, u: Float, place: Int) {
+    val r = u * 0.62f
+    val (hi, lo) = when (place) {
+        1 -> Color(0xFFFFE082) to Color(0xFFF9A825)
+        2 -> Color(0xFFF5F5F5) to Color(0xFF9E9E9E)
+        3 -> Color(0xFFFFCCBC) to Color(0xFFBF6A3A)
+        else -> Color(0xFFB3E5FC) to Color(0xFF4F7EA8)
+    }
+    drawCircle(Color.Black.copy(alpha = 0.25f), r, c + Offset(0f, r * 0.12f))
+    drawCircle(Brush.radialGradient(listOf(hi, lo), center = c - Offset(r * 0.3f, r * 0.35f), radius = r * 1.6f), r, c)
+    drawCircle(Color.White, r, c, style = Stroke(r * 0.1f))
+    val num = tm.measure("$place", TextStyle(fontSize = (r * 0.9f / density).sp, fontWeight = FontWeight.Black, color = Color(0xFF3E2723)))
+    drawText(num, topLeft = c - Offset(num.size.width / 2f, num.size.height / 2f + r * 0.08f))
+    // Ribbon with the title under the medal.
+    val label = tm.measure(Podium.title(place).uppercase(), TextStyle(fontSize = (u * 0.3f / density).sp, fontWeight = FontWeight.ExtraBold,
+        color = Color.White, letterSpacing = 0.5.sp))
+    val w = label.size.width + u * 0.3f; val h = label.size.height + u * 0.06f
+    val tl = Offset(c.x - w / 2, c.y + r * 0.7f)
+    drawRoundRect(lo.darken(0.25f), tl, Size(w, h), CornerRadius(h / 2))
+    drawRoundRect(Color.White, tl, Size(w, h), CornerRadius(h / 2), style = Stroke(maxOf(u * 0.03f, 1f)))
+    drawText(label, topLeft = Offset(c.x - label.size.width / 2f, tl.y + u * 0.03f))
+}
+
+/** Compact circular robot toggle that sits between a human yard's four wells. */
+@Composable
+private fun AutoBotToggle(on: Boolean, pulse: Float, color: Color, name: String, onClick: () -> Unit, modifier: Modifier) {
+    Box(
+        modifier
+            .graphicsLayer { val k = if (on) 1f + 0.06f * pulse else 1f; scaleX = k; scaleY = k }
+            .background(if (on) color else Color.White, CircleShape)
+            .border(if (on) 2.5.dp else 1.5.dp, if (on) Color.White else color.darken(0.2f), CircleShape)
+            .semantics { contentDescription = "Auto-Bot for $name ${if (on) "on" else "off"}" }
+            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (on) {
+            // Glowing ring + AUTO micro-label.
+            Canvas(Modifier.fillMaxSize()) {
+                drawCircle(Color.White.copy(alpha = 0.35f + 0.4f * pulse), size.minDimension / 2 * (1.05f + 0.12f * pulse), style = Stroke(2.dp.toPx()))
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(RobotIcon, null, tint = Color.White, modifier = Modifier.fillMaxSize(0.5f))
+                Text("AUTO", color = Color.White, fontSize = 7.sp, fontWeight = FontWeight.Black, lineHeight = 7.sp)
+            }
+        } else {
+            Icon(RobotIcon, null, tint = color.darken(0.25f), modifier = Modifier.fillMaxSize(0.62f))
+        }
     }
 }
 
@@ -616,8 +746,9 @@ private fun DrawScope.drawBoard(
                 val r = view.yardRect(seat)
                 val tl = px(r.topLeft); val sz = Size(r.width * unit, r.height * unit)
                 drawRect(col, tl, sz)
-                val bz = view.outer * unit
-                drawRect(theme.yardInner.copy(alpha = if (used) 1f else 0.7f), tl + Offset(bz, bz), Size(sz.width - 2 * bz, sz.height - 2 * bz))
+                // Slim coloured bezel: the yard gives its spare area to the road.
+                val bz = BoardView.BEZEL * view.outer * unit
+                drawRoundRect(theme.yardInner, tl + Offset(bz, bz), Size(sz.width - 2 * bz, sz.height - 2 * bz), CornerRadius(unit * 0.18f))
                 if (active) {
                     // Whose turn: a soft white pulse just outside the white box.
                     val g = unit * (0.05f + 0.05f * pulse)
@@ -627,18 +758,25 @@ private fun DrawScope.drawBoard(
             } else {
                 val r = geo.yardRadius * unit
                 drawCircle(col, r, c)
-                drawCircle(theme.yardInner.copy(alpha = if (used) 1f else 0.7f), r * 0.82f, c)
+                drawCircle(theme.yardInner, r * 0.82f, c)
                 if (active) drawCircle(Color.White.copy(alpha = 0.35f + 0.5f * pulse), r - unit * 0.1f, c, style = Stroke(unit * (0.1f + 0.08f * pulse)))
             }
-            val baseR = unit * (if (cross) 0.5f * view.outer else 0.42f)
+            val baseR = unit * view.wellRadius
             val base = seatColor(seat)
             for (k in 0..3) {
-                val s = px(view.v(geo.yardSlot(seat, k)))
+                val s = px(view.yardSlot(seat, k))
                 // A shallow coin in the pawn colour: a darker rim and a soft lit centre.
                 drawCircle(base, baseR, s)
                 drawCircle(Brush.radialGradient(0f to Color.White.copy(alpha = 0.14f), 0.55f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.22f),
                     center = s - Offset(baseR * 0.15f, baseR * 0.2f), radius = baseR * 1.1f), baseR, s)
                 drawCircle(base.darken(0.3f), baseR * 0.8f, s, style = Stroke(unit * 0.04f))
+                if (!used) {
+                    // Seat not in this match: a clean × in each empty well.
+                    val a = baseR * 0.42f
+                    val sw = maxOf(baseR * 0.2f, 1.5f)
+                    drawLine(Color.White.copy(alpha = 0.95f), s + Offset(-a, -a), s + Offset(a, a), sw, StrokeCap.Round)
+                    drawLine(Color.White.copy(alpha = 0.95f), s + Offset(-a, a), s + Offset(a, -a), sw, StrokeCap.Round)
+                }
             }
         }
 
@@ -652,35 +790,40 @@ private fun DrawScope.drawBoard(
         }
 
         // Track: white tiles with thin grey grid lines; start squares and home lanes are solid colour.
-        fun tile(pt: Pt, arm: Int, fill: Color, lines: Boolean) {
+        fun tile(pt: Pt, arm: Int, fill: Color, lines: Boolean, line: Color = theme.grid) {
             if (cross) {
                 val r = view.tileRect(pt)
                 val tl = px(r.topLeft); val sz = Size(r.width * unit, r.height * unit)
                 drawRect(fill, tl, sz)
-                if (lines) drawRect(theme.grid, tl, sz, style = Stroke(gridW))
+                if (lines) drawRect(line, tl, sz, style = Stroke(gridW))
             } else {
                 val p = px(view.v(pt)); val cs = unit
                 rotate(view.armDeg(arm), p) {
                     val tl = p - Offset(cs / 2, cs / 2)
                     drawRect(fill, tl, Size(cs, cs))
-                    if (lines) drawRect(theme.grid, tl, Size(cs, cs), style = Stroke(gridW))
+                    if (lines) drawRect(line, tl, Size(cs, cs), style = Stroke(gridW))
                 }
             }
         }
         val starts = (0 until topo.seats).associateBy { topo.startCell(it) }
         for (c in 0 until topo.trackLength) if (c !in starts) tile(geo.trackCell(c), geo.laneDepthOf(c).first, theme.cell, lines = true)
         for ((c, seat) in starts) tile(geo.trackCell(c), geo.laneDepthOf(c).first, seatColor(seat), lines = false)
-        for (seat in 0 until topo.seats) for (i in 0..4) tile(geo.stretchCell(seat, i), seat, seatColor(seat), lines = false)
+        // Home lanes: every step boxed by a crisp divider in a darker shade of the lane colour.
+        for (seat in 0 until topo.seats) for (i in 0..4) {
+            val c = seatColor(seat)
+            tile(geo.stretchCell(seat, i), seat, c, lines = true, line = c.darken(0.42f))
+        }
 
         val k = unit * view.tile
         for (c in 0 until topo.trackLength) {
             val (arm, lane, depth) = geo.laneDepthOf(c)
             val p = px(view.v(geo.trackCell(c)))
             if (topo.isSafeCell(c) && c !in starts) {
-                // Outlined white star on each star square.
-                val star = starPath(p, k * 0.38f)
-                drawPath(star, Color.White)
-                drawPath(star, theme.grid.darken(0.25f), style = Stroke(maxOf(k * 0.035f, 1f), join = StrokeJoin.Round))
+                // Star square: a star filled in the colour of the arm it sits on.
+                val star = starPath(p, k * 0.36f)
+                val sc = seatColor(arm)
+                drawPath(star, sc)
+                drawPath(star, sc.darken(0.4f), style = Stroke(maxOf(k * 0.04f, 1f), join = StrokeJoin.Round))
             }
             if (lane == 0 && depth == 5) {
                 // Thin entry arrow in the seat's colour, pointing from the tip into its home lane.

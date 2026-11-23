@@ -10,11 +10,15 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.assertIsDisplayed
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import androidx.compose.ui.test.getBoundsInRoot
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -79,7 +83,12 @@ class AppSmokeTest {
         rule.onNodeWithContentDescription("Player 2 Human").assertExists()
         rule.onNodeWithContentDescription("Player 4 Bot").assertExists()
         rule.onNodeWithText("Play").assertIsDisplayed()
+        // Tier chips sit on one row; picking Unbeatable shows no warning.
+        rule.onAllNodesWithText("★ Unbeatable")[0].performClick()
+        settle(200)
+        rule.onAllNodes(hasText("Not fair", substring = true)).assertCountEquals(0)
         shot("02_setup_3h1b")
+        rule.onAllNodesWithText("Grandmaster")[0].performClick()
         // Back to 1 human + 3 bots for the gameplay run.
         rule.onNodeWithContentDescription("Player 2 Human").performClick()
         rule.onNodeWithContentDescription("Player 3 Human").performClick()
@@ -142,7 +151,7 @@ class AppSmokeTest {
         rule.onNodeWithContentDescription("Settings").performClick()
         settle(400)
         shot("10_settings")
-        rule.onNodeWithText("Midnight Sovereign").performClick()
+        rule.onNodeWithText("Midnight Royale").performClick()
         settle(300)
         rule.onNodeWithText("Done").performClick()
         settle(300)
@@ -171,6 +180,20 @@ class AppSmokeTest {
         rule.onNodeWithText("Play").performClick()
         settle(800)
         shot("13_board_2p_dark")
+        // Step away: the Auto-Bot plays our turns, then hand control back.
+        val board = hasContentDescription("Ludo board", substring = true)
+        val before = rule.onNode(board).getBoundsInRoot()
+        rule.onNodeWithContentDescription("Auto-Bot for Player off").performClick()
+        repeat(12) {
+            settle(500)
+            // Pods expand and shrink as turns change, but the board never moves.
+            assertEquals(before, rule.onNode(board).getBoundsInRoot())
+        }
+        rule.onNodeWithContentDescription("Auto-Bot for Player on").assertExists()
+        shot("16_auto_bot_on")
+        rule.onNodeWithContentDescription("Auto-Bot for Player on").performClick()
+        settle(300)
+        rule.onNodeWithContentDescription("Auto-Bot for Player off").assertExists()
         exitBoard()
     }
 

@@ -1,7 +1,10 @@
 package com.ludosovereign.session
 
+import com.ludosovereign.ai.BotFactory
 import com.ludosovereign.ai.LudoBot
+import com.ludosovereign.ai.MoveAnalysis
 import com.ludosovereign.ai.MoveScorer
+import com.ludosovereign.engine.BotTier
 import com.ludosovereign.engine.DiceSource
 import com.ludosovereign.engine.GameAction
 import com.ludosovereign.engine.GameEvent
@@ -45,7 +48,7 @@ data class SessionSettings(
     val rollMs get() = if (fastAnimations) rollAnimationMs / 2 else rollAnimationMs
     val moveMs get() = if (fastAnimations) moveAnimationMs / 2 else moveAnimationMs
     val timings: AnimationTimings
-        get() = AnimationTimings().scaled((if (fastAnimations) 0.6f else 1f) / animationSpeed.coerceIn(0.25f, 4f))
+        get() = AnimationTimings().scaled((if (fastAnimations) 0.6f else 1f) * AnimationTimings.factorFor(animationSpeed))
 }
 
 data class LudoUiState(
@@ -66,6 +69,8 @@ data class LudoUiState(
     val timings: AnimationTimings = AnimationTimings(),
     /** True while the match is paused from the in-game menu. */
     val paused: Boolean = false,
+    /** Human players whose turns the Auto-Bot is currently playing (AFK / break mode). */
+    val autoPlayers: Set<Int> = emptySet(),
     val stats: MatchStats,
     val result: MatchResult? = null,
 )
@@ -81,7 +86,7 @@ class MatchSession(
     initialStats: MatchStats = MatchStats.empty(initial.config),
     private val bots: Map<Int, LudoBot>,
     private val dice: DiceSource,
-    private val settings: SessionSettings = SessionSettings(),
+    private var settings: SessionSettings = SessionSettings(),
     private val aiDispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val clock: () -> Long = System::currentTimeMillis,
     private val onCheckpoint: suspend (Checkpoint) -> Unit = {},
@@ -91,6 +96,8 @@ class MatchSession(
         data object Roll : Intent
         data class Move(val tokenId: Int) : Intent
         data object Undo : Intent
+        /** Something outside the turn changed (Auto-Bot toggled, match ended early): re-check who plays. */
+        data object Wake : Intent
     }
 
     private var game = initial
@@ -101,6 +108,9 @@ class MatchSession(
     private val intents = Channel<Intent>(Channel.UNLIMITED)
     private var seq = 0L
     private var job: Job? = null
+    private val autoPlayers = LinkedHashSet<Int>()
+    private val autoBot: LudoBot by lazy { BotFactory.create(BotTier.GRANDMASTER) }
+    private var endRequested = false
 
     private val _ui = MutableStateFlow(LudoUiState(game = initial, stats = initialStats))
     val ui: StateFlow<LudoUiState> = _ui.asStateFlow()
@@ -116,6 +126,29 @@ class MatchSession(
     fun undo() { if (_ui.value.awaitingHuman) intents.trySend(Intent.Undo) }
     fun setPaused(value: Boolean) { pausedFlow.value = value; _ui.update { it.copy(paused = value) } }
 
+    /** Applies a new user animation speed immediately, including to a match already in progress. */
+    fun setAnimationSpeed(speed: Float) {
+        if (speed == settings.animationSpeed) return
+        settings = settings.copy(animationSpeed = speed)
+        _ui.update { it.copy(timings = t) }
+    }
+
+    /** Turns the Auto-Bot on or off for one human player; takes effect on the current or next decision. */
+    fun toggleAuto(player: Int) {
+        if (player !in game.config.players.indices || game.config.players[player].kind != PlayerKind.HUMAN) return
+        if (!autoPlayers.add(player)) autoPlayers.remove(player)
+        _ui.update { it.copy(autoPlayers = autoPlayers.toSet()) }
+        intents.trySend(Intent.Wake)
+    }
+
+    /** Ends the match now with standings ranked by progress (offered once someone has finished). */
+    fun endNow() {
+        if (game.phase == Phase.GAME_OVER) return
+        endRequested = true
+        intents.trySend(Intent.Wake)
+        setPaused(false)
+    }
+
     private fun acceptsHuman(phase: TurnPhase): Boolean = _ui.value.let { it.awaitingHuman && it.turnPhase == phase && !it.paused }
 
     private val pausedFlow = MutableStateFlow(false)
@@ -123,6 +156,11 @@ class MatchSession(
     private val t: AnimationTimings get() = settings.timings
 
     private fun isBot(player: Int) = game.config.players[player].kind == PlayerKind.BOT && bots.containsKey(player)
+    private fun botFor(player: Int): LudoBot? = when {
+        isBot(player) -> bots.getValue(player)
+        player in autoPlayers -> autoBot
+        else -> null
+    }
 
     private fun setPhase(phase: TurnPhase, awaitingHuman: Boolean = false) =
         _ui.update { it.copy(turnPhase = phase, awaitingHuman = awaitingHuman, timings = t) }
@@ -132,15 +170,30 @@ class MatchSession(
 
     private suspend fun runLoop() {
         publish(emptyList(), TurnPhase.NEXT_TURN)
-        while (game.phase != Phase.GAME_OVER) {
+        while (game.phase != Phase.GAME_OVER && !endRequested) {
             awaitUnpaused()
-            if (isBot(game.current)) botStep(bots.getValue(game.current)) else humanStep()
+            if (endRequested) break
+            val bot = botFor(game.current)
+            if (bot != null) {
+                if (_ui.value.awaitingHuman) setPhase(_ui.value.turnPhase)
+                botStep(bot)
+            } else humanStep()
+        }
+        if (game.phase != Phase.GAME_OVER) {
+            val events = ArrayList<GameEvent>()
+            game = LudoEngine.endNow(game, events)
+            publish(events, TurnPhase.GAME_OVER)
+            checkpoint()
         }
         finish()
     }
 
     /** Applies a move and holds the turn until the board's hop / capture / home animation has finished. */
     private suspend fun applyMove(tokenId: Int) {
+        val snapshot = game
+        MoveAnalysis.analyse(snapshot, tokenId)?.let { v ->
+            stats = stats.recordDecision(snapshot.current, v.accuracy, v.missedCut)
+        }
         val events = apply(GameAction.MoveToken(tokenId), TurnPhase.ANIMATING_TOKEN)
         delay(t.moveDuration(events))
         if (game.phase != Phase.GAME_OVER) setPhase(TurnPhase.NEXT_TURN)
@@ -191,6 +244,7 @@ class MatchSession(
                 }
                 when (awaitIntent(timerMs)) {
                     Intent.Undo -> { performUndo(); return }
+                    Intent.Wake -> return
                     is Intent.Move -> return // not expecting a move; ignore
                     Intent.Roll, null -> {
                         awaitUnpaused()
@@ -229,6 +283,7 @@ class MatchSession(
                             return
                         }
                         Intent.Undo -> { if (undoPoint != null) { performUndo(); return } }
+                        Intent.Wake -> return
                         else -> continue
                     }
                 }

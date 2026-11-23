@@ -26,7 +26,6 @@
     <string name="rule_all_places">Seguir hasta decidir todos los puestos</string>
     <string name="rule_undo">Permitir deshacer</string>
     <string name="rule_undo_desc">Solo en partidas locales entre humanos.</string>
-    <string name="unbeatable_warning">Dado no justo: este bot elige su propia tirada.</string>
     <string name="start_match">Empezar partida</string>
     <string name="play">Jugar</string>
     <string name="snakes_ladders">Serpientes y escaleras</string>
