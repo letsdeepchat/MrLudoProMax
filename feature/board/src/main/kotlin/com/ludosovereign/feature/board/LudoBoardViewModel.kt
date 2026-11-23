@@ -72,8 +72,9 @@ class LudoBoardViewModel(
                     val t = s.timings
                     val travel = (if (s.lastEvents.any { it is GameEvent.TokenReleased }) t.exitMs else 0L) + t.hopMs * t.hops(s.lastEvents)
                     val events = s.lastEvents
-                    if (travel > 0) launch { delay(travel); feedback.onLudoEvents(events, humanWon) }
-                    else feedback.onLudoEvents(events, humanWon)
+                    val after = s.game
+                    if (travel > 0) launch { delay(travel); feedback.onLudoEvents(events, humanWon, after) }
+                    else feedback.onLudoEvents(events, humanWon, after)
                 }
             }
         }
@@ -89,6 +90,8 @@ class LudoBoardViewModel(
     fun saveToSlot(slot: Int) = viewModelScope.launch { saves.copyAutoSaveTo(slot) }
     fun step() = feedback.step()
     fun setPaused(paused: Boolean) = session.setPaused(paused)
+    fun toggleAuto(player: Int) { feedback.tap(); session.toggleAuto(player) }
+    fun endNow() = session.endNow()
 
     override fun onCleared() { session.stop() }
 

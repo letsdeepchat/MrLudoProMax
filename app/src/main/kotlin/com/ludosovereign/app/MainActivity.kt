@@ -97,7 +97,7 @@ class MainActivity : ComponentActivity() {
                 HomeScreen(
                     slots = slots,
                     profileName = activeProfile?.name ?: defaultName,
-                    rankName = Progression.rankFor(activeProfile?.xp ?: 0).name.lowercase().replaceFirstChar { it.uppercase() },
+                    rankName = Progression.rankFor(activeProfile?.xp ?: 0).title,
                     onResume = { slot ->
                         scope.launch {
                             val cp = c.saves.load(slot) ?: return@launch

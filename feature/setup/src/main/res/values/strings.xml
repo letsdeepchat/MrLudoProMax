@@ -26,7 +26,6 @@
     <string name="rule_all_places">Play on for all placements</string>
     <string name="rule_undo">Allow undo</string>
     <string name="rule_undo_desc">Pass &amp; Play with humans only.</string>
-    <string name="unbeatable_warning">Not fair dice: this bot picks its own dice roll.</string>
     <string name="start_match">Start match</string>
     <string name="play">Play</string>
     <string name="snakes_ladders">Snakes &amp; Ladders</string>

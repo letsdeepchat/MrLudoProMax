@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="board_title">Ludo Sovereign</string>
+    <string name="board_title">Ludo Ultra Pro-Max</string>
     <string name="back">Back</string>
     <string name="undo">Undo last move</string>
     <string name="menu">Menu</string>
@@ -22,4 +22,6 @@
     <string name="audio_studio">Audio Studio</string>
     <string name="bot_name">Bot</string>
     <string name="save_game">Save game</string>
+    <string name="end_match_results">End match &amp; show results</string>
+    <string name="match_stats">Match Statistics</string>
 </resources>

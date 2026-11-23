@@ -26,7 +26,6 @@
     <string name="rule_all_places">എല്ലാ സ്ഥാനങ്ങൾക്കും കളി തുടരുക</string>
     <string name="rule_undo">പഴയപടിയാക്കാൻ അനുവദിക്കുക</string>
     <string name="rule_undo_desc">മനുഷ്യർ മാത്രമുള്ള പാസ് &amp; പ്ലേ.</string>
-    <string name="unbeatable_warning">ന്യായമായ പകിടയല്ല: ഈ ബോട്ട് സ്വന്തം സംഖ്യ സ്വയം തിരഞ്ഞെടുക്കും.</string>
     <string name="start_match">മത്സരം ആരംഭിക്കുക</string>
     <string name="play">കളിക്കുക</string>
     <string name="snakes_ladders">പാമ്പും ഏണിയും</string>

@@ -1,6 +1,8 @@
 package com.ludosovereign.feature.board
 
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -67,7 +69,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.ludosovereign.session.Podium
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -138,6 +143,8 @@ fun LudoBoardScreen(
                 game = game, events = s.lastEvents, eventSeq = s.eventSeq, selectable = selectable,
                 activeSeat = activeSeat, timings = s.timings, onTokenTap = vm::tapToken, onHop = vm::step,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 6.dp),
+                autoPlayers = s.autoPlayers,
+                onAutoToggle = if (s.turnPhase == TurnPhase.GAME_OVER) null else vm::toggleAuto,
             )
             PodRow(bottomSeats, s, view, top = false, onRoll = vm::roll)
             Spacer(Modifier.height(10.dp))
@@ -153,6 +160,8 @@ fun LudoBoardScreen(
 
         if (menu) PauseMenu(
             undo = undoAllowed && s.canUndo,
+            canEndEarly = game.finishOrder.isNotEmpty() && s.result == null,
+            onEndEarly = { menu = false; vm.endNow() },
             onResume = { menu = false; vm.setPaused(false) },
             onSave = { slot -> vm.saveToSlot(slot); savedToast = slot },
             onUndo = { vm.undo(); menu = false; vm.setPaused(false) },
@@ -168,21 +177,7 @@ fun LudoBoardScreen(
             text = { Text(stringResource(R.string.saved_to_slot, slot)) })
     }
 
-    s.result?.let { r ->
-        AlertDialog(
-            onDismissRequest = {},
-            title = { Text(stringResource(R.string.winner, r.players[r.finishOrder.first()])) },
-            text = {
-                Column {
-                    r.finishOrder.forEachIndexed { place, p ->
-                        val st = r.stats?.players?.getOrNull(p)
-                        Text("${place + 1}. ${r.players[p]}  ·  ${stringResource(R.string.captures_short, st?.captures ?: 0)}  ·  ${stringResource(R.string.fortresses_short, st?.fortressesBuilt ?: 0)}")
-                    }
-                }
-            },
-            confirmButton = { TextButton(onClick = onExit) { Text(stringResource(R.string.done)) } },
-        )
-    }
+    s.result?.let { r -> MatchSummary(r, game, onDone = onExit) }
 }
 
 @Composable
@@ -206,62 +201,74 @@ private fun PodRow(seats: List<Int>, s: LudoUiState, view: BoardView, top: Boole
 
 @Composable
 private fun PodRowLtr(seats: List<Int>, s: LudoUiState, view: BoardView, top: Boolean, onRoll: () -> Unit) {
+    val game = s.game
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-        horizontalArrangement = if (seats.size == 1) Arrangement.Center else Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = if (top) Alignment.Bottom else Alignment.Top,
     ) {
         seats.forEach { seat ->
+            val player = game.config.seats.indexOf(seat)
+            val active = player >= 0 && player == game.current && s.turnPhase != TurnPhase.GAME_OVER
+            // Turn-driven sizing: the active pod grows to one uniform size, the others rest compact.
+            val grow by animateFloatAsState(if (active) 1f else 0f, tween(200, easing = FastOutSlowInEasing), label = "podGrow")
             val mirrored = seats.size > 1 && view.yard(seat).x > 0.5f
-            CornerPod(seat, s, mirrored, compact = seats.size > 2, onRoll = onRoll)
+            CornerPod(
+                seat, s, mirrored, hex = seats.size > 2, grow = grow, onRoll = onRoll,
+                modifier = Modifier.weight(1f + (if (seats.size > 2) 0.5f else 0.45f) * grow),
+            )
         }
     }
 }
 
 /**
- * One seat's pod: recessed dice box, bouncing turn arrow, colour badge (with a robot mark for bots),
- * name and finished-token pips. Unused seats render as a dimmed empty slot.
+ * One seat's pod: recessed dice box, bouncing turn arrow, colour badge (with a robot mark for bots
+ * and Auto-Bot players), name and finished-token pips, or the podium title once finished. [grow]
+ * (0 = resting, 1 = active) drives every size so all seats expand to exactly the same active size.
  */
 @Composable
-private fun CornerPod(seat: Int, s: LudoUiState, mirrored: Boolean, compact: Boolean, onRoll: () -> Unit) {
+private fun CornerPod(seat: Int, s: LudoUiState, mirrored: Boolean, hex: Boolean, grow: Float, onRoll: () -> Unit, modifier: Modifier) {
     val game = s.game
     val theme = LocalBoardTheme.current
     val cb = LocalColorblind.current
     val player = game.config.seats.indexOf(seat)
     val used = player >= 0
     val active = used && player == game.current && s.turnPhase != TurnPhase.GAME_OVER
-    val color = if (used) theme.tokenColor(game.config.players[player].colorIndex, cb) else Color.Gray
+    val idle = remember(game.config) { idleSeatColors(game) }
+    val color = if (used) theme.tokenColor(game.config.players[player].colorIndex, cb) else theme.tokenColor(idle[seat] ?: seat, cb)
     val inf = rememberInfiniteTransition(label = "pod")
     val glow by inf.animateFloat(0.35f, 1f, infiniteRepeatable(tween(650), RepeatMode.Reverse), label = "glow")
     val bounce by inf.animateFloat(0f, 1f, infiniteRepeatable(tween(420), RepeatMode.Reverse), label = "bounce")
-    val boxSize = if (compact) 44.dp else 54.dp
+    val boxSize = if (hex) lerpDp(34.dp, 50.dp, grow) else lerpDp(40.dp, 60.dp, grow)
 
     val canRoll = active && s.awaitingHuman && s.turnPhase == TurnPhase.WAITING_FOR_ROLL && !s.paused
     val rolling = active && s.rollingPlayer == player
     val dice = s.lastEvents.filterIsInstance<GameEvent.DiceRolled>().lastOrNull()?.value ?: game.dice.takeIf { it > 0 } ?: 6
+    val place = if (used) game.finishOrder.indexOf(player) + 1 else 0
+    val auto = used && player in s.autoPlayers
 
     val diceBox: @Composable () -> Unit = {
         Box(
             Modifier.size(boxSize)
                 .background(Brush.verticalGradient(if (active) listOf(Color.Black.copy(alpha = 0.45f), Color.Black.copy(alpha = 0.22f))
-                    else listOf(Color.Black.copy(alpha = 0.22f), Color.Black.copy(alpha = 0.08f))), RoundedCornerShape(14.dp))
-                .border(2.dp, if (active) color.copy(alpha = 0.6f + 0.4f * glow) else Color.White.copy(alpha = 0.15f), RoundedCornerShape(14.dp)),
+                    else listOf(Color.Black.copy(alpha = 0.22f), Color.Black.copy(alpha = 0.08f))), RoundedCornerShape(lerpDp(11.dp, 15.dp, grow)))
+                .border(2.dp, if (active) color.copy(alpha = 0.6f + 0.4f * glow) else Color.White.copy(alpha = 0.15f), RoundedCornerShape(lerpDp(11.dp, 15.dp, grow))),
             contentAlignment = Alignment.Center,
         ) {
             if (active) {
                 PodDice(
                     value = dice, rolling = rolling, rollMs = s.timings.rollMs, enabled = canRoll,
                     accent = theme.accent, contentDescription = stringResource(R.string.dice), onClick = onRoll,
-                    modifier = Modifier.size(boxSize - 6.dp),
+                    modifier = Modifier.size(boxSize - 5.dp),
                 )
             }
         }
     }
     val arrow: @Composable () -> Unit = {
-        Canvas(Modifier.size(width = 16.dp, height = 22.dp).alpha(if (active) 1f else 0f)) {
+        Canvas(Modifier.size(width = 14.dp * grow, height = 22.dp).alpha(grow)) {
             // Points at the dice box (outer side), bouncing towards it.
             val dir = if (mirrored) 1f else -1f
-            val dx = dir * bounce * 5.dp.toPx()
+            val dx = dir * bounce * 4.dp.toPx()
             val tipX = if (mirrored) size.width else 0f
             val baseX = if (mirrored) size.width * 0.15f else size.width * 0.85f
             val p = Path().apply {
@@ -274,40 +281,50 @@ private fun CornerPod(seat: Int, s: LudoUiState, mirrored: Boolean, compact: Boo
         }
     }
     val badge: @Composable () -> Unit = {
-        Box(Modifier.size(if (compact) 28.dp else 32.dp)) {
+        val d = if (hex) lerpDp(24.dp, 28.dp, grow) else lerpDp(26.dp, 34.dp, grow)
+        Box(Modifier.size(d)) {
             Canvas(Modifier.fillMaxSize().background(Color.White.copy(alpha = 0.92f), CircleShape).border(2.dp, color, CircleShape)) {
                 drawPin(Offset(size.width / 2, size.height * 0.84f), size.minDimension * 0.22f, color)
             }
-            if (used && game.config.players[player].kind == PlayerKind.BOT) {
+            if (used && (game.config.players[player].kind == PlayerKind.BOT || auto)) {
                 Icon(
                     RobotIcon, stringResource(R.string.bot_name),
                     tint = Color.White,
-                    modifier = Modifier.size(15.dp).align(Alignment.BottomEnd).offset(4.dp, 3.dp)
-                        .background(Color(0xFF263238), CircleShape).padding(2.dp),
+                    modifier = Modifier.size(14.dp).align(Alignment.BottomEnd).offset(4.dp, 3.dp)
+                        .background(if (auto) color.darken(0.2f) else Color(0xFF263238), CircleShape).padding(2.dp),
                 )
             }
         }
     }
-    val label: @Composable () -> Unit = {
+    val label: @Composable (Modifier) -> Unit = { m ->
         Column(
-            horizontalAlignment = if (compact) Alignment.CenterHorizontally else if (mirrored) Alignment.End else Alignment.Start,
-            modifier = Modifier.widthIn(max = if (compact) 100.dp else 96.dp),
+            horizontalAlignment = if (hex) Alignment.CenterHorizontally else if (mirrored) Alignment.End else Alignment.Start,
+            modifier = m,
         ) {
             Text(
                 if (used) game.config.players[player].name else "—",
-                style = MaterialTheme.typography.labelLarge, fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
+                style = MaterialTheme.typography.labelLarge.copy(fontSize = (12.5f + 2.5f * grow).sp),
+                fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
                 color = theme.ui.onBackdrop, maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
-            if (used) {
+            if (used && place > 0) {
+                RankChip(place, small = grow < 0.5f)
+            } else if (used) {
                 val home = game.tokensHome(player)
                 val goal = game.rules.tokensToWin
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                val dot = lerpDp(6.dp, 8.dp, grow)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                     for (i in 0 until goal) Box(
-                        Modifier.size(8.dp).background(if (i < home) color else theme.ui.onBackdrop.copy(alpha = 0.22f), CircleShape)
+                        Modifier.size(dot).background(if (i < home) color else theme.ui.onBackdrop.copy(alpha = 0.22f), CircleShape)
                             .border(1.dp, if (i < home) Color.White else Color.Transparent, CircleShape),
                     )
-                    Text("$home/$goal", style = MaterialTheme.typography.labelSmall, color = theme.ui.onBackdrop.copy(alpha = 0.85f))
+                    // The compact resting pod keeps just the dots; the active pod adds the X/4 count.
+                    if (grow > 0.5f) {
+                        Spacer(Modifier.width(1.dp))
+                        Text("$home/$goal", style = MaterialTheme.typography.labelSmall, color = theme.ui.onBackdrop.copy(alpha = 0.85f), maxLines = 1)
+                    }
                 }
+                if (auto) Text("AUTO", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = theme.accent, maxLines = 1)
             }
         }
     }
@@ -317,7 +334,7 @@ private fun CornerPod(seat: Int, s: LudoUiState, mirrored: Boolean, compact: Boo
     val lightBackdrop = theme.ui.backdropBottom.relativeLuminance() > 0.4
     val plateTop = if (lightBackdrop) Color.White.copy(alpha = 0.72f) else Color.White.copy(alpha = 0.16f)
     val plateBottom = if (lightBackdrop) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.2f)
-    val podModifier = Modifier
+    val podModifier = modifier
             .alpha(if (used) 1f else 0.35f)
             .drawBehind {
                 drawRoundRect(Color.Black.copy(alpha = 0.18f), Offset(0f, 3.dp.toPx()), size, CornerRadius(18.dp.toPx()))
@@ -329,24 +346,56 @@ private fun CornerPod(seat: Int, s: LudoUiState, mirrored: Boolean, compact: Boo
             .border(if (active) 2.dp else 1.dp, if (active) color.copy(alpha = 0.6f + 0.4f * glow) else Color.White.copy(alpha = 0.3f), shape)
             .padding(horizontal = 6.dp, vertical = 5.dp)
             .semantics { contentDescription = if (used) "Seat ${game.config.players[player].name}${if (active) ", active" else ""}" else "Empty seat" }
-    if (compact) {
+    if (hex) {
         // Hex board: three pods per row, so the name sits under the dice instead of beside it.
         Column(podModifier, horizontalAlignment = Alignment.CenterHorizontally) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                 if (mirrored) { badge(); arrow(); diceBox() } else { diceBox(); arrow(); badge() }
             }
-            label()
+            label(Modifier.fillMaxWidth())
         }
     } else {
         Row(podModifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            if (mirrored) { label(); badge(); arrow(); diceBox() } else { diceBox(); arrow(); badge(); label() }
+            if (mirrored) { label(Modifier.weight(1f)); badge(); arrow(); diceBox() } else { diceBox(); arrow(); badge(); label(Modifier.weight(1f)) }
         }
     }
+}
+
+private fun lerpDp(a: Dp, b: Dp, t: Float): Dp = a + (b - a) * t
+
+/** Podium title chip: Ultra (gold), Pro (silver), Max (bronze), Aspirant (blue). */
+@Composable
+internal fun RankChip(place: Int, small: Boolean = false) {
+    val (bg, fg) = podiumColors(place)
+    Box(
+        Modifier.background(bg, RoundedCornerShape(50)).border(1.dp, Color.White.copy(alpha = 0.8f), RoundedCornerShape(50))
+            .padding(horizontal = if (small) 6.dp else 8.dp, vertical = 1.dp),
+    ) {
+        Text("${ordinal(place)} · ${Podium.title(place)}", color = fg, fontWeight = FontWeight.ExtraBold, maxLines = 1,
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = if (small) 10.sp else 11.sp))
+    }
+}
+
+internal fun podiumColors(place: Int): Pair<Color, Color> = when (place) {
+    1 -> Color(0xFFFFC62F) to Color(0xFF3E2723)
+    2 -> Color(0xFFCFD8DC) to Color(0xFF263238)
+    3 -> Color(0xFFD08B5B) to Color.White
+    else -> Color(0xFF5C8DBF) to Color.White
+}
+
+internal fun ordinal(n: Int): String = n.toString() + when {
+    n % 100 in 11..13 -> "th"
+    n % 10 == 1 -> "st"
+    n % 10 == 2 -> "nd"
+    n % 10 == 3 -> "rd"
+    else -> "th"
 }
 
 @Composable
 private fun PauseMenu(
     undo: Boolean,
+    canEndEarly: Boolean,
+    onEndEarly: () -> Unit,
     onResume: () -> Unit,
     onSave: (Int) -> Unit,
     onUndo: () -> Unit,
@@ -376,6 +425,9 @@ private fun PauseMenu(
                     ) { Text("$slot", style = MaterialTheme.typography.titleSmall) }
                 }
                 if (undo) FilledTonalButton(onClick = onUndo, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.undo)) }
+                if (canEndEarly) FilledTonalButton(onClick = onEndEarly, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.end_match_results))
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilledTonalButton(onClick = onAudio, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.audio_studio)) }
                     FilledTonalButton(onClick = onSettings, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.settings)) }

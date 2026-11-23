@@ -66,7 +66,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ludosovereign.designsystem.BoardThemes
 import com.ludosovereign.designsystem.CtaButton
 import com.ludosovereign.designsystem.PaletteCard
@@ -129,7 +131,8 @@ fun SetupScreen(
     var count by remember { mutableStateOf(4) }
     var fortress by remember { mutableStateOf(true) }
     var tripleSix by remember { mutableStateOf(true) }
-    var allPlacements by remember { mutableStateOf(false) }
+    // 3P/4P games keep going after the first finisher until only one player is left.
+    var allPlacements by remember { mutableStateOf(true) }
     var undo by remember { mutableStateOf(undoDefault) }
     var snlLayout by remember { mutableStateOf(SnlLayouts.CLASSIC_100) }
     var snlExact by remember { mutableStateOf(true) }
@@ -300,6 +303,29 @@ fun SetupScreen(
 }
 
 @Composable
+private fun TierChip(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val cs = MaterialTheme.colorScheme
+    val shape = RoundedCornerShape(10.dp)
+    Box(
+        modifier
+            .height(34.dp)
+            .background(if (selected) cs.primary else cs.surfaceVariant.copy(alpha = 0.55f), shape)
+            .border(1.dp, if (selected) cs.primary else cs.outline.copy(alpha = 0.5f), shape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 4.dp)
+            .semantics { contentDescription = "$text${if (selected) ", selected" else ""}" },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp, letterSpacing = 0.sp),
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            color = if (selected) cs.onPrimary else cs.onSurface,
+        )
+    }
+}
+
+@Composable
 private fun Pill(text: String, selected: Boolean, onClick: () -> Unit) {
     FilterChip(selected = selected, onClick = onClick, label = { Text(text) })
 }
@@ -353,24 +379,16 @@ private fun RosterRow(row: PlayerRow, index: Int, ludo: Boolean, onToggle: () ->
             }
         }
         if (bot && ludo) {
-            FlowRow(Modifier.padding(start = 40.dp, top = 2.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            // All three tiers on one row, equal widths, single-line labels: no wrapping on any phone.
+            Row(
+                Modifier.fillMaxWidth().padding(start = 40.dp, top = 4.dp, bottom = 2.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
                 BotTier.entries.forEach { t ->
-                    FilterChip(
-                        selected = row.tier == t, onClick = { row.tier = t },
-                        label = {
-                            Text(when (t) { BotTier.CASUAL -> "Casual"; BotTier.GRANDMASTER -> "Grandmaster"; BotTier.UNBEATABLE -> "★ Unbeatable" },
-                                style = MaterialTheme.typography.labelMedium)
-                        },
-                        modifier = Modifier.height(30.dp),
+                    TierChip(
+                        text = when (t) { BotTier.CASUAL -> "Casual"; BotTier.GRANDMASTER -> "Grandmaster"; BotTier.UNBEATABLE -> "★ Unbeatable" },
+                        selected = row.tier == t, onClick = { row.tier = t }, modifier = Modifier.weight(1f),
                     )
-                }
-            }
-            if (row.tier == BotTier.UNBEATABLE) {
-                Row(Modifier.padding(start = 40.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.Warning, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(14.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text(stringResource(R.string.unbeatable_warning), style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.error)
                 }
             }
         }

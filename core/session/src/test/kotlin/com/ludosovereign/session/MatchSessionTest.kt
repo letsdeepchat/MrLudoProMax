@@ -185,10 +185,80 @@ class MatchSessionTest {
         job.cancel()
     }
 
+    @Test fun autoBotTakesOverAndHandsBack() = runTest {
+        val cfg = MatchConfig.create(BoardTopology.CLASSIC_4, RuleSet.classic(), listOf(human, human.copy(name = "Friend")))
+        val tokens = IntArray(8) { BASE }.also { it[0] = 10; it[1] = 20; it[4] = 20 }
+        val session = MatchSession(GameState(cfg, tokens, 0, Phase.AWAITING_ROLL), bots = emptyMap(),
+            dice = ScriptedDice(3, 2, 4, 1, 3, 2, 4, 1), aiDispatcher = StandardTestDispatcher(testScheduler))
+        val job = session.start(this)
+        runCurrent()
+        assertEquals(TurnPhase.WAITING_FOR_ROLL, session.ui.value.turnPhase)
+        // You step away: the Auto-Bot rolls and moves for you, then Friend waits for a human tap.
+        session.toggleAuto(0); advanceUntilIdle()
+        assertTrue(0 in session.ui.value.autoPlayers)
+        assertEquals(1, session.ui.value.game.current)
+        assertTrue(session.ui.value.awaitingHuman)
+        assertEquals(1, session.log.actions.count { it is com.ludosovereign.engine.GameAction.MoveToken })
+        // Back from the break: hand control back before your next turn.
+        session.toggleAuto(0); advanceUntilIdle()
+        assertFalse(0 in session.ui.value.autoPlayers)
+        session.roll(); advanceUntilIdle() // Friend rolls a 2 with one token out: auto-move
+        assertEquals(0, session.ui.value.game.current)
+        assertEquals(TurnPhase.WAITING_FOR_ROLL, session.ui.value.turnPhase, "you are asked to roll again")
+        // Bots can't be toggled; neither can unknown players.
+        session.toggleAuto(7)
+        assertTrue(session.ui.value.autoPlayers.isEmpty())
+        job.cancel()
+    }
+
+    @Test fun matchContinuesAfterFirstFinisherAndCanEndEarly() = runTest {
+        val cfg = MatchConfig.create(BoardTopology.CLASSIC_4, RuleSet.classic().copy(playForAllPlacements = true),
+            listOf(human, human.copy(name = "B"), human.copy(name = "C")))
+        val h = BoardTopology.CLASSIC_4.homeProgress
+        val tokens = IntArray(12) { BASE }.also { it[0] = h; it[1] = h; it[2] = h; it[3] = h - 2; it[4] = 10 }
+        var result: MatchResult? = null
+        val session = MatchSession(GameState(cfg, tokens, 0, Phase.AWAITING_ROLL), bots = emptyMap(),
+            dice = ScriptedDice(2, 3, 1), aiDispatcher = StandardTestDispatcher(testScheduler), onFinished = { result = it })
+        val job = session.start(this)
+        runCurrent()
+        session.roll(); advanceUntilIdle() // P0's last token goes Home: 1st place, but the match goes on
+        val g = session.ui.value.game
+        assertEquals(listOf(0), g.finishOrder.toList())
+        assertTrue(g.phase != Phase.GAME_OVER)
+        assertEquals(1, g.current, "the finished player is skipped")
+        session.endNow(); advanceUntilIdle()
+        val r = assertNotNull(result)
+        assertEquals(listOf(0, 1, 2), r.finishOrder, "unfinished players ranked by progress")
+        assertEquals(Phase.GAME_OVER, session.ui.value.game.phase)
+        job.cancel()
+    }
+
+    @Test fun decisionsFeedAccuracyAndMissedCuts() = runTest {
+        val cfg = MatchConfig.create(BoardTopology.CLASSIC_4, RuleSet.classic(), listOf(human, human.copy(name = "Friend")))
+        // Red at progress 15 (cell 15) rolling 3 can cut the 2nd player's lone token on cell 18 (seat 2: progress 44).
+        val tokens = IntArray(8) { BASE }.also { it[0] = 15; it[1] = 30; it[4] = 44 }
+        val session = MatchSession(GameState(cfg, tokens, 0, Phase.AWAITING_ROLL), bots = emptyMap(),
+            dice = ScriptedDice(3, 3), aiDispatcher = StandardTestDispatcher(testScheduler))
+        val job = session.start(this)
+        runCurrent()
+        session.roll(); advanceUntilIdle()
+        assertTrue(com.ludosovereign.ai.MoveAnalysis.captures(session.ui.value.game, 0))
+        session.move(1); advanceUntilIdle() // passes up the cut
+        val st = session.ui.value.stats.players[0]
+        assertEquals(1, st.decisions)
+        assertEquals(1, st.missedCuts)
+        assertTrue(st.accuracyPercent!! < 100)
+        job.cancel()
+    }
+
+    @Test fun podiumTitles() {
+        assertEquals(listOf("Ultra", "Pro", "Max", "Aspirant", "Aspirant"), (1..5).map(Podium::title))
+    }
+
     @Test fun progressionRanks() {
         assertEquals(Progression.Rank.PAWN, Progression.rankFor(0))
         assertEquals(Progression.Rank.KNIGHT, Progression.rankFor(1000))
-        assertEquals(Progression.Rank.SOVEREIGN, Progression.rankFor(50_000))
+        assertEquals(Progression.Rank.PRO_MAX, Progression.rankFor(50_000))
         assertTrue(Progression.xpFor(PlayerMatchStats(captures = 2), 1, 4) > Progression.xpFor(PlayerMatchStats(), 4, 4))
     }
 }

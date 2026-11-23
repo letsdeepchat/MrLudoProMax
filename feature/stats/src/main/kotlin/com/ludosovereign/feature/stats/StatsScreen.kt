@@ -71,7 +71,7 @@ fun achievements(s: ProfileStatsEntity?, xp: Int): List<Achievement> {
         Achievement("Untouchable", "Win without losing a single token", st.flawlessWins >= 1),
         Achievement("Giant Slayer", "Beat a lineup that includes the Unbeatable engine", st.unbeatableWins >= 1),
         Achievement("Snake Charmer", "Win at Snakes & Ladders", st.snlWins >= 1),
-        Achievement("Sovereign", "Reach the Sovereign rank", Progression.rankFor(xp) == Progression.Rank.SOVEREIGN),
+        Achievement("Pro-Max", "Reach the Pro-Max rank", Progression.rankFor(xp) == Progression.Rank.PRO_MAX),
     )
 }
 
@@ -110,7 +110,7 @@ fun StatsScreen(
                 val rank = Progression.rankFor(active.xp)
                 PaletteCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) {
-                        Text(rank.name.lowercase().replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                        Text(rank.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                         Text("${active.xp} XP", style = MaterialTheme.typography.bodyMedium)
                         Spacer(Modifier.height(8.dp))
                         LinearProgressIndicator(progress = { Progression.progressToNext(active.xp) }, modifier = Modifier.fillMaxWidth())

@@ -26,7 +26,6 @@
     <string name="rule_all_places">تابع حتى تحديد كل المراكز</string>
     <string name="rule_undo">السماح بالتراجع</string>
     <string name="rule_undo_desc">للعب المحلي بين البشر فقط.</string>
-    <string name="unbeatable_warning">نرد غير عادل: هذا الروبوت يختار رميته بنفسه.</string>
     <string name="start_match">ابدأ المباراة</string>
     <string name="play">العب</string>
     <string name="snakes_ladders">السلم والثعبان</string>
