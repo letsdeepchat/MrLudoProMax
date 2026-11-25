@@ -11,4 +11,14 @@
     <string name="haptics">હૅપ્ટિક્સ</string>
     <string name="haptics_on">કંપન પ્રતિસાદ</string>
     <string name="haptic_strength">તીવ્રતા</string>
+    <string name="sound_effect_pack">સાઉન્ડ ઇફેક્ટ પૅક</string>
+    <string name="more_packs">વધુ પૅક</string>
+    <string name="preview">સાંભળો</string>
+    <string name="cue_dice">પાસો</string>
+    <string name="cue_move">ચાલ</string>
+    <string name="cue_capture">કાપવું</string>
+    <string name="cue_safe">સુરક્ષિત ખાનું</string>
+    <string name="cue_home">ઘર</string>
+    <string name="cue_six">છગ્ગો</string>
+    <string name="cue_win">જીત</string>
 </resources>

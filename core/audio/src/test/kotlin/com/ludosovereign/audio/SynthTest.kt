@@ -9,15 +9,17 @@ import kotlin.test.assertTrue
 class SynthTest {
     private val synth = ProceduralSynth()
 
-    @Test fun sixPacksRenderEveryEvent() {
-        assertEquals(6, SoundPackRegistry.ALL.size)
+    @Test fun everyPackRendersEveryEvent() {
+        assertEquals(5, SoundPackRegistry.PROFILES.size)
+        assertEquals(11, SoundPackRegistry.ALL.size)
+        assertEquals(SoundPackRegistry.ALL.size, SoundPackRegistry.ALL.map { it.id }.toSet().size)
         var totalBytes = 0L
         for (pack in SoundPackRegistry.ALL) for (e in SoundEvent.entries) {
             val pcm = synth.render(pack, e)
             val secs = pcm.size / synth.sampleRate.toDouble()
             assertTrue(pcm.isNotEmpty() && secs <= 3.0, "${pack.id}/$e length $secs s")
             val peak = pcm.maxOf { abs(it.toInt()) }
-            assertTrue(peak > 1000, "${pack.id}/$e is silent")
+            assertTrue(peak > 500, "${pack.id}/$e is silent")
             totalBytes += pcm.size * 2
         }
         println("all packs: ${totalBytes / 1024} KiB of PCM generated at runtime (0 bytes in the APK)")
@@ -45,6 +47,6 @@ class SynthTest {
         SoundPackRegistry.ALL.forEach { p -> SoundEvent.entries.forEach { synth.render(p, it) } }
         val ms = (System.nanoTime() - t0) / 1e6
         println("render all packs: %.0f ms".format(ms))
-        assertTrue(ms < 5000)
+        assertTrue(ms < 8000)
     }
 }

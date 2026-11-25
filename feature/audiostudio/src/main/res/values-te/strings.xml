@@ -11,4 +11,14 @@
     <string name="haptics">హాప్టిక్స్</string>
     <string name="haptics_on">వైబ్రేషన్ ఫీడ్‌బ్యాక్</string>
     <string name="haptic_strength">తీవ్రత</string>
+    <string name="sound_effect_pack">సౌండ్ ఎఫెక్ట్ ప్యాక్</string>
+    <string name="more_packs">మరిన్ని ప్యాక్‌లు</string>
+    <string name="preview">వినండి</string>
+    <string name="cue_dice">పాచిక</string>
+    <string name="cue_move">కదలిక</string>
+    <string name="cue_capture">కోత</string>
+    <string name="cue_safe">సురక్షిత గడి</string>
+    <string name="cue_home">ఇల్లు</string>
+    <string name="cue_six">ఆరు</string>
+    <string name="cue_win">గెలుపు</string>
 </resources>

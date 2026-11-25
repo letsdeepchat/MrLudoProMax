@@ -33,10 +33,14 @@ data class AnimationTimings(
     val homeBurstMs: Long = 320,
     /** Gap before the next turn's indicator moves. */
     val turnGapMs: Long = 120,
+    /** A bot's beat before it rolls, so the turn hand-over is visible. */
+    val botThinkMs: Long = 320,
+    /** A bot holds its settled dice face this long before its pawn starts moving. */
+    val botRevealMs: Long = 650,
 ) {
     fun scaled(k: Float): AnimationTimings = if (k == 1f) this else AnimationTimings(
         s(rollMs, k), s(settleMs, k), s(autoMovePauseMs, k), s(hopMs, k), s(exitMs, k), s(impactMs, k),
-        s(retreatMs, k), s(homeBurstMs, k), s(turnGapMs, k),
+        s(retreatMs, k), s(homeBurstMs, k), s(turnGapMs, k), s(botThinkMs, k), s(botRevealMs, k),
     )
 
     /** Number of hops the mover makes for this event batch (0 if no token moved along the track). */
@@ -50,13 +54,20 @@ data class AnimationTimings(
         t += hopMs * hops(events)
         if (events.any { it is GameEvent.Captured }) t += impactMs + retreatMs
         if (events.any { it is GameEvent.TokenReachedHome }) t += homeBurstMs
-        return t + turnGapMs
+        // Each tween starts on the next frame and the pawn settles into its stack afterwards; budget for
+        // both so the next roll can never cut a hop short (that left pawns replaying stale paths).
+        val tweens = hops(events) + (if (events.any { it is GameEvent.TokenReleased }) 1 else 0) + 2
+        return t + turnGapMs + FRAME_SLACK_MS * tweens + SETTLE_MS
     }
 
     private fun s(v: Long, k: Float) = (v * k).toLong().coerceAtLeast(1)
 
     companion object {
         const val BASE_HOP_MS = 235L
+        /** One display frame of slack per tween. */
+        const val FRAME_SLACK_MS = 17L
+        /** The final glide into the resting stack layout. */
+        const val SETTLE_MS = 120L
         const val SLOWEST_HOP_MS = 425f
         const val FASTEST_HOP_MS = 90f
         const val MIN_SPEED = 0.5f

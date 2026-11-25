@@ -36,6 +36,7 @@ class HapticController(context: Context) {
         SoundEvent.CAPTURE -> longArrayOf(0, 45, 30, 80) to intArrayOf(0, 255, 0, 180)
         SoundEvent.FORTRESS_LOCK -> longArrayOf(0, 12, 35, 12, 35, 30) to intArrayOf(0, 255, 0, 255, 0, 150)
         SoundEvent.FORTRESS_STANDOFF -> longArrayOf(0, 25, 50, 25) to intArrayOf(0, 120, 0, 120)
+        SoundEvent.SAFE_SPOT -> longArrayOf(0, 12, 30, 12) to intArrayOf(0, 110, 0, 150)
         SoundEvent.HOME -> longArrayOf(0, 30, 40, 30, 40, 60) to intArrayOf(0, 140, 0, 180, 0, 230)
         SoundEvent.SIX -> longArrayOf(0, 15, 30, 15) to intArrayOf(0, 160, 0, 220)
         SoundEvent.TRIPLE_SIX -> longArrayOf(0, 120) to intArrayOf(0, 200)

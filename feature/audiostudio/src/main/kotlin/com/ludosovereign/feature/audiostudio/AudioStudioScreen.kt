@@ -21,6 +21,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import com.ludosovereign.audio.SoundEvent
 import com.ludosovereign.audio.SoundPackRegistry
 import com.ludosovereign.data.AppSettings
@@ -53,8 +68,37 @@ fun AudioStudioScreen(
             Modifier.fillMaxSize().padding(pad).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            SectionCard(stringResource(R.string.sound_pack)) {
-                ChoiceRow(SoundPackRegistry.ALL.map { it.id }, settings.soundPackId, { SoundPackRegistry.byId(it).displayName },
+            SectionCard(stringResource(R.string.sound_effect_pack)) {
+                // Sound Effect Pack Selector: five profiles, each with its own move, capture, safe-square and home cues.
+                SoundPackRegistry.PROFILES.forEach { pack ->
+                    val selected = settings.soundPackId == pack.id
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f) else Color.Transparent)
+                            .selectable(selected, role = Role.RadioButton) {
+                                onUpdate { s -> s.copy(soundPackId = pack.id) }; onPreview(pack.id, SoundEvent.HOME)
+                            }
+                            .padding(horizontal = 6.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(selected = selected, onClick = null)
+                        Spacer(Modifier.width(8.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(pack.displayName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                            Text(pack.description, style = MaterialTheme.typography.bodySmall, color = LocalContentColor.current.copy(alpha = 0.75f))
+                        }
+                    }
+                }
+                Text(stringResource(R.string.preview), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    PREVIEW_CUES.forEach { (e, label) ->
+                        AssistChip(onClick = { onPreview(settings.soundPackId, e) }, label = { Text(stringResource(label)) })
+                    }
+                }
+            }
+            SectionCard(stringResource(R.string.more_packs)) {
+                ChoiceRow(SoundPackRegistry.LEGACY.map { it.id }, settings.soundPackId, { SoundPackRegistry.byId(it).displayName },
                     { id -> onUpdate { s -> s.copy(soundPackId = id) }; onPreview(id, SoundEvent.FORTRESS_LOCK) })
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     SoundEvent.entries.forEach { e ->
@@ -76,3 +120,14 @@ fun AudioStudioScreen(
         }
     }
 }
+
+/** The cues each profile maps: what a player hears for dice, moves, cuts, safe squares and home. */
+private val PREVIEW_CUES = listOf(
+    SoundEvent.DICE_ROLL to R.string.cue_dice,
+    SoundEvent.STEP to R.string.cue_move,
+    SoundEvent.CAPTURE to R.string.cue_capture,
+    SoundEvent.SAFE_SPOT to R.string.cue_safe,
+    SoundEvent.HOME to R.string.cue_home,
+    SoundEvent.SIX to R.string.cue_six,
+    SoundEvent.WIN to R.string.cue_win,
+)

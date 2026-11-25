@@ -145,6 +145,7 @@ fun LudoBoardScreen(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 6.dp),
                 autoPlayers = s.autoPlayers,
                 onAutoToggle = if (s.turnPhase == TurnPhase.GAME_OVER) null else vm::toggleAuto,
+                autoSpent = s.autoSpent,
             )
             PodRow(bottomSeats, s, view, top = false, onRoll = vm::roll)
             Spacer(Modifier.height(10.dp))
@@ -310,24 +311,25 @@ private fun CornerPod(seat: Int, s: LudoUiState, mirrored: Boolean, hex: Boolean
                 fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
                 color = theme.ui.onBackdrop, maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
-            if (used && place > 0) {
-                RankChip(place, small = grow < 0.5f)
-            } else if (used) {
+            if (used) {
+                // Home pips come straight from the state the board is drawing, so the last pawn's
+                // landing fills every pip at once; a finished player keeps the full row under its rank.
                 val home = game.tokensHome(player)
                 val goal = game.rules.tokensToWin
                 val dot = lerpDp(6.dp, 8.dp, grow)
+                if (place > 0) RankChip(place, small = grow < 0.5f)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                     for (i in 0 until goal) Box(
                         Modifier.size(dot).background(if (i < home) color else theme.ui.onBackdrop.copy(alpha = 0.22f), CircleShape)
                             .border(1.dp, if (i < home) Color.White else Color.Transparent, CircleShape),
                     )
                     // The compact resting pod keeps just the dots; the active pod adds the X/4 count.
-                    if (grow > 0.5f) {
+                    if (grow > 0.5f && place == 0) {
                         Spacer(Modifier.width(1.dp))
                         Text("$home/$goal", style = MaterialTheme.typography.labelSmall, color = theme.ui.onBackdrop.copy(alpha = 0.85f), maxLines = 1)
                     }
                 }
-                if (auto) Text("AUTO", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = theme.accent, maxLines = 1)
+                if (auto && place == 0) Text("AUTO", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = theme.accent, maxLines = 1)
             }
         }
     }

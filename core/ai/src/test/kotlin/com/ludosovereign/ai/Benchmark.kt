@@ -45,8 +45,10 @@ fun main() {
         val gmT = ArrayList<Double>(); val gmD = ArrayList<Int>()
         var nodes = 0L; var micros = 0L
         for (s in positions) {
-            ub.chooseDice(s); ub.lastResult!!.let { ubT += it.elapsedMicros / 1000.0; ubD += it.depthReached; nodes += it.nodes; micros += it.elapsedMicros }
             val r = LudoEngine.roll(s, 6)
+            if (r.phase == Phase.AWAITING_MOVE && LudoEngine.legalMoves(r).size > 1) {
+                ub.chooseMove(r); ub.lastResult?.let { ubT += it.elapsedMicros / 1000.0; ubD += it.depthReached; nodes += it.nodes; micros += it.elapsedMicros }
+            }
             if (r.phase == Phase.AWAITING_MOVE && LudoEngine.legalMoves(r).size > 1) {
                 gm.chooseMove(r); gm.lastResult!!.let { gmT += it.elapsedMicros / 1000.0; gmD += it.depthReached }
             }

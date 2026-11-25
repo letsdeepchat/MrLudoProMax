@@ -25,6 +25,8 @@ data class PlayerMatchStats(
     val decisions: Int = 0,
     /** Sum over [decisions] of how close the chosen move was to the engine's top move (0..1 each). */
     val accuracySum: Double = 0.0,
+    /** The player handed a turn to the Auto-Bot this match; it is single-use, so the toggle is now spent. */
+    val autoBotUsed: Boolean = false,
 ) {
     /** Accuracy in percent, or null when the player never had a real choice. */
     val accuracyPercent: Int? get() = if (decisions == 0) null else Math.round(accuracySum * 100.0 / decisions).toInt()
@@ -49,6 +51,9 @@ data class MatchStats(val players: List<PlayerMatchStats>) {
         }
         return MatchStats(p)
     }
+
+    fun markAutoBotUsed(player: Int): MatchStats =
+        MatchStats(players.mapIndexed { i, p -> if (i == player) p.copy(autoBotUsed = true) else p })
 
     fun fold(before: GameState, events: List<GameEvent>): MatchStats {
         val p = players.toMutableList()

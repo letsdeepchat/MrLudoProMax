@@ -193,7 +193,12 @@ class AppSmokeTest {
         shot("16_auto_bot_on")
         rule.onNodeWithContentDescription("Auto-Bot for Player on").performClick()
         settle(300)
-        rule.onNodeWithContentDescription("Auto-Bot for Player off").assertExists()
+        // Single use: once control is back, the toggle is spent for the rest of the match.
+        rule.onNodeWithContentDescription("Auto-Bot for Player used").assertExists()
+        rule.onNodeWithContentDescription("Auto-Bot for Player used").performClick()
+        settle(300)
+        rule.onNodeWithContentDescription("Auto-Bot for Player used").assertExists()
+        shot("17_auto_bot_spent")
         exitBoard()
     }
 
