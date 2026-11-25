@@ -11,4 +11,14 @@
     <string name="haptics">Vibrations</string>
     <string name="haptics_on">Retour haptique</string>
     <string name="haptic_strength">Intensité</string>
+    <string name="sound_effect_pack">Pack d\'effets sonores</string>
+    <string name="more_packs">Autres packs</string>
+    <string name="preview">Écouter</string>
+    <string name="cue_dice">Dé</string>
+    <string name="cue_move">Déplacer</string>
+    <string name="cue_capture">Capture</string>
+    <string name="cue_safe">Case sûre</string>
+    <string name="cue_home">Maison</string>
+    <string name="cue_six">Six</string>
+    <string name="cue_win">Victoire</string>
 </resources>

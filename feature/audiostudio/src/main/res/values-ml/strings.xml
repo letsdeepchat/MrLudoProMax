@@ -11,4 +11,14 @@
     <string name="haptics">ഹാപ്റ്റിക്സ്</string>
     <string name="haptics_on">വൈബ്രേഷൻ പ്രതികരണം</string>
     <string name="haptic_strength">തീവ്രത</string>
+    <string name="sound_effect_pack">സൗണ്ട് ഇഫക്റ്റ് പാക്ക്</string>
+    <string name="more_packs">കൂടുതൽ പാക്കുകൾ</string>
+    <string name="preview">കേൾക്കുക</string>
+    <string name="cue_dice">പകിട</string>
+    <string name="cue_move">നീക്കം</string>
+    <string name="cue_capture">വെട്ട്</string>
+    <string name="cue_safe">സുരക്ഷിത കളം</string>
+    <string name="cue_home">വീട്</string>
+    <string name="cue_six">ആറ്</string>
+    <string name="cue_win">വിജയം</string>
 </resources>

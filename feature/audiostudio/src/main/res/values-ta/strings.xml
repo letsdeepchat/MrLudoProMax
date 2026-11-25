@@ -11,4 +11,14 @@
     <string name="haptics">அதிர்வு</string>
     <string name="haptics_on">அதிர்வுப் பின்னூட்டம்</string>
     <string name="haptic_strength">வலிமை</string>
+    <string name="sound_effect_pack">ஒலி விளைவு தொகுப்பு</string>
+    <string name="more_packs">மேலும் தொகுப்புகள்</string>
+    <string name="preview">கேளுங்கள்</string>
+    <string name="cue_dice">பகடை</string>
+    <string name="cue_move">நகர்வு</string>
+    <string name="cue_capture">வெட்டு</string>
+    <string name="cue_safe">பாதுகாப்பு கட்டம்</string>
+    <string name="cue_home">வீடு</string>
+    <string name="cue_six">ஆறு</string>
+    <string name="cue_win">வெற்றி</string>
 </resources>

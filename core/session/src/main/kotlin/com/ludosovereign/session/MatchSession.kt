@@ -1,10 +1,9 @@
 package com.ludosovereign.session
 
-import com.ludosovereign.ai.BotFactory
+import com.ludosovereign.ai.AutoPilotBot
 import com.ludosovereign.ai.LudoBot
 import com.ludosovereign.ai.MoveAnalysis
 import com.ludosovereign.ai.MoveScorer
-import com.ludosovereign.engine.BotTier
 import com.ludosovereign.engine.DiceSource
 import com.ludosovereign.engine.GameAction
 import com.ludosovereign.engine.GameEvent
@@ -71,6 +70,8 @@ data class LudoUiState(
     val paused: Boolean = false,
     /** Human players whose turns the Auto-Bot is currently playing (AFK / break mode). */
     val autoPlayers: Set<Int> = emptySet(),
+    /** Human players who already used their one Auto-Bot chance and have taken control back. */
+    val autoSpent: Set<Int> = emptySet(),
     val stats: MatchStats,
     val result: MatchResult? = null,
 )
@@ -91,6 +92,8 @@ class MatchSession(
     private val clock: () -> Long = System::currentTimeMillis,
     private val onCheckpoint: suspend (Checkpoint) -> Unit = {},
     private val onFinished: suspend (MatchResult) -> Unit = {},
+    /** Casual-strength, capture-first bot that plays for a human on a break. */
+    private val autoBotFactory: () -> LudoBot = { AutoPilotBot() },
 ) {
     private sealed interface Intent {
         data object Roll : Intent
@@ -109,10 +112,10 @@ class MatchSession(
     private var seq = 0L
     private var job: Job? = null
     private val autoPlayers = LinkedHashSet<Int>()
-    private val autoBot: LudoBot by lazy { BotFactory.create(BotTier.GRANDMASTER) }
+    private val autoBot: LudoBot by lazy { autoBotFactory() }
     private var endRequested = false
 
-    private val _ui = MutableStateFlow(LudoUiState(game = initial, stats = initialStats))
+    private val _ui = MutableStateFlow(LudoUiState(game = initial, stats = initialStats, autoSpent = spentFrom(initialStats)))
     val ui: StateFlow<LudoUiState> = _ui.asStateFlow()
 
     val log: MatchLog get() = matchLog
@@ -133,13 +136,28 @@ class MatchSession(
         _ui.update { it.copy(timings = t) }
     }
 
-    /** Turns the Auto-Bot on or off for one human player; takes effect on the current or next decision. */
+    /**
+     * Turns the Auto-Bot on or off for one human player; takes effect on the current or next decision.
+     * It is single-use: a player may switch it on once per match, and once they switch it off again
+     * the toggle stays revoked until the match ends (also across save and resume).
+     */
     fun toggleAuto(player: Int) {
         if (player !in game.config.players.indices || game.config.players[player].kind != PlayerKind.HUMAN) return
-        if (!autoPlayers.add(player)) autoPlayers.remove(player)
-        _ui.update { it.copy(autoPlayers = autoPlayers.toSet()) }
+        if (player in autoPlayers) {
+            autoPlayers.remove(player)
+        } else {
+            if (stats.players[player].autoBotUsed) return
+            autoPlayers.add(player)
+            stats = stats.markAutoBotUsed(player)
+        }
+        _ui.update { it.copy(autoPlayers = autoPlayers.toSet(), autoSpent = spentFrom(stats) - autoPlayers, stats = stats) }
         intents.trySend(Intent.Wake)
     }
+
+    /** True while [player] may still switch the Auto-Bot on. */
+    fun canEnableAuto(player: Int): Boolean = player !in autoPlayers && !stats.players[player].autoBotUsed
+
+    private fun spentFrom(s: MatchStats): Set<Int> = s.players.indices.filter { s.players[it].autoBotUsed }.toSet()
 
     /** Ends the match now with standings ranked by progress (offered once someone has finished). */
     fun endNow() {
@@ -220,7 +238,12 @@ class MatchSession(
         when (game.phase) {
             Phase.AWAITING_ROLL -> {
                 val snapshot = game
+                // A visible beat before the bot picks up the dice.
+                delay(t.botThinkMs)
+                awaitUnpaused()
                 rollDice(player) { withContext(aiDispatcher) { bot.chooseDice(snapshot) } ?: dice.roll() }
+                // Hold the settled face so everyone can read the number before the pawn moves.
+                if (game.phase == Phase.AWAITING_MOVE) delay(t.botRevealMs)
             }
             Phase.AWAITING_MOVE -> {
                 val snapshot = game
@@ -308,7 +331,10 @@ class MatchSession(
     private suspend fun performUndo() {
         val point = undoPoint ?: return
         undoPoint = null
-        game = point.first; matchLog = point.second; stats = point.third
+        // Undo rewinds the move, never the spent Auto-Bot chance.
+        val spent = stats
+        game = point.first; matchLog = point.second
+        stats = MatchStats(point.third.players.mapIndexed { i, p -> p.copy(autoBotUsed = p.autoBotUsed || spent.players[i].autoBotUsed) })
         publish(emptyList(), TurnPhase.NEXT_TURN)
         checkpoint()
     }
@@ -336,6 +362,7 @@ class MatchSession(
                 legalMoves = if (g.phase == Phase.AWAITING_MOVE) LudoEngine.legalMoves(g) else IntArray(0),
                 canUndo = undoPoint != null,
                 stats = stats,
+                autoSpent = spentFrom(stats) - autoPlayers,
             )
         }
     }

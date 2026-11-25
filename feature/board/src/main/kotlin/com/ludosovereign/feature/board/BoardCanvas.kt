@@ -288,17 +288,20 @@ fun BoardCanvas(
     autoPlayers: Set<Int> = emptySet(),
     /** When set, each unfinished human player's yard gets a centre Auto-Bot toggle. */
     onAutoToggle: ((Int) -> Unit)? = null,
+    /** Players whose single Auto-Bot chance is spent: their toggle is shown greyed out and ignores taps. */
+    autoSpent: Set<Int> = emptySet(),
 ) {
     val theme = LocalBoardTheme.current
     val colorblind = LocalColorblind.current
     val view = remember(game.topology) { BoardView(BoardGeometry(game.topology)) }
     val layout = remember(game) { restingLayout(game, view) }
     val visuals = remember(game.config) { layout.map { TokenVisual(it) } }
-    var prevTokens by remember(game.config) { mutableStateOf(game.tokens) }
     val bursts = remember { mutableStateListOf<Burst>() }
     val flashes = remember { mutableStateListOf<Flash>() }
     val rings = remember { mutableStateListOf<Ring>() }
     val tickPop = remember(game.config) { mutableStateMapOf<Int, Float>() }
+    // eventSeq whose animation has started; until then a pawn arriving Home keeps its ✓ hidden.
+    var startedSeq by remember(game.config) { mutableStateOf(Long.MIN_VALUE) }
     var shake by remember { mutableFloatStateOf(0f) }
     var fortressPulse by remember { mutableFloatStateOf(0f) }
     val hop by rememberUpdatedState(onHop)
@@ -329,9 +332,13 @@ fun BoardCanvas(
     LaunchedEffect(game) {
         val t = timings
         val evs = events
-        val moverId = evs.firstNotNullOfOrNull {
-            when (it) { is GameEvent.TokenMoved -> it.tokenId; is GameEvent.TokenReleased -> it.tokenId; else -> null }
-        }
+        val plan = planMove(evs)
+        val moverId = plan?.tokenId
+        val reachedHome = moverId != null && moverId in homeArrivals(evs)
+        // A cancelled earlier animation must not leave a ✓ half-popped: start from a clean slate.
+        tickPop.clear()
+        if (reachedHome) tickPop[moverId!!] = 0f
+        startedSeq = eventSeq
         val victims = evs.filterIsInstance<GameEvent.Captured>()
         val victimIds = victims.map { it.victimTokenId }.toSet()
         val settle = tween<Float>(120, easing = FastOutSlowInEasing)
@@ -368,11 +375,9 @@ fun BoardCanvas(
                 val v = visuals[moverId]
                 val owner = moverId / tpp
                 val seat = game.seatOf(owner)
-                val from = prevTokens[moverId]
-                val to = game.tokens[moverId]
+                val from = plan!!.from
+                val to = plan.to
                 val color = playerColors[owner]
-                val reachedHome = evs.any { it is GameEvent.TokenReachedHome }
-                if (reachedHome) tickPop[moverId] = 0f
                 if (from == BASE) {
                     arc(v, layout[moverId].copy(scale = 1f), t.exitMs, 0.9f)
                     hop()
@@ -410,10 +415,11 @@ fun BoardCanvas(
                     launch { glide(v, layout[moverId], 120) }
                     // The ✓ pops into the yard slot while the confetti flies.
                     launch {
-                        animate(0f, 1f, animationSpec = keyframes { durationMillis = t.homeBurstMs.toInt(); 1.25f at (t.homeBurstMs * 0.6).toInt() }) { x, _ ->
-                            tickPop[moverId] = x
-                        }
-                        tickPop.remove(moverId)
+                        try {
+                            animate(0f, 1f, animationSpec = keyframes { durationMillis = t.homeBurstMs.toInt(); 1.25f at (t.homeBurstMs * 0.6).toInt() }) { x, _ ->
+                                tickPop[moverId] = x
+                            }
+                        } finally { tickPop.remove(moverId) }
                     }
                     try {
                         animate(0f, 1f, animationSpec = tween(t.homeBurstMs.toInt(), easing = LinearEasing)) { x, _ -> b.t = x }
@@ -426,7 +432,6 @@ fun BoardCanvas(
                 launch { animate(1f, 0f, animationSpec = settle) { x, _ -> fortressPulse = x } }
             }
         }
-        prevTokens = game.tokens
     }
 
     val inf = rememberInfiniteTransition(label = "board")
@@ -462,9 +467,9 @@ fun BoardCanvas(
         }
 
         // Finished pawns: a ✓ badge pops into each emptied yard slot.
+        val arriving = if (startedSeq == eventSeq) emptySet() else homeArrivals(events)
         for (id in game.tokens.indices) {
-            if (game.tokens[id] != homeProgress) continue
-            val k = tickPop[id] ?: if (prevTokens[id] != homeProgress) 0f else 1f
+            val k = tickScale(game.tokens[id] == homeProgress, tickPop[id], id in arriving)
             if (k <= 0f) continue
             val seat = game.seatOf(id / tpp)
             drawTick(px(view.yardSlot(seat, id % tpp)), unit * view.wellRadius * 0.86f * k)
@@ -541,8 +546,9 @@ fun BoardCanvas(
             if (spec.kind != com.ludosovereign.engine.PlayerKind.HUMAN || game.hasFinished(player)) continue
             val c = view.yard(game.seatOf(player))
             val d = unitDp * (if (view.cross) 0.98f else 0.9f) * view.tile
+            val on = player in autoPlayers
             AutoBotToggle(
-                on = player in autoPlayers, pulse = pulse, color = playerColors[player],
+                on = on, spent = !on && player in autoSpent, pulse = pulse, color = playerColors[player],
                 name = spec.name, onClick = { onAutoToggle(player) },
                 modifier = Modifier.offset(unitDp * (view.span + c.x) - d / 2, unitDp * (view.span + c.y) - d / 2).size(d),
             )
@@ -600,16 +606,26 @@ private fun DrawScope.drawPodiumBadge(tm: TextMeasurer, c: Offset, u: Float, pla
 
 /** Compact circular robot toggle that sits between a human yard's four wells. */
 @Composable
-private fun AutoBotToggle(on: Boolean, pulse: Float, color: Color, name: String, onClick: () -> Unit, modifier: Modifier) {
+private fun AutoBotToggle(on: Boolean, spent: Boolean, pulse: Float, color: Color, name: String, onClick: () -> Unit, modifier: Modifier) {
     Box(
         modifier
-            .graphicsLayer { val k = if (on) 1f + 0.06f * pulse else 1f; scaleX = k; scaleY = k }
-            .background(if (on) color else Color.White, CircleShape)
-            .border(if (on) 2.5.dp else 1.5.dp, if (on) Color.White else color.darken(0.2f), CircleShape)
-            .semantics { contentDescription = "Auto-Bot for $name ${if (on) "on" else "off"}" }
-            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick),
+            .graphicsLayer { val k = if (on) 1f + 0.06f * pulse else 1f; scaleX = k; scaleY = k; alpha = if (spent) 0.45f else 1f }
+            .background(if (on) color else if (spent) Color(0xFFD5D5D5) else Color.White, CircleShape)
+            .border(if (on) 2.5.dp else 1.5.dp, if (on) Color.White else if (spent) Color(0xFF9E9E9E) else color.darken(0.2f), CircleShape)
+            .semantics { contentDescription = "Auto-Bot for $name ${if (on) "on" else if (spent) "used" else "off"}" }
+            .clickable(enabled = !spent, interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
+        if (spent) {
+            // Single use: the chance is gone for this match. A struck-through robot marks it.
+            Icon(RobotIcon, null, tint = Color(0xFF757575), modifier = Modifier.fillMaxSize(0.62f))
+            Canvas(Modifier.fillMaxSize()) {
+                val r = size.minDimension / 2
+                drawLine(Color(0xFF616161), center + Offset(-r * 0.62f, r * 0.62f), center + Offset(r * 0.62f, -r * 0.62f),
+                    strokeWidth = r * 0.14f, cap = StrokeCap.Round)
+            }
+            return@Box
+        }
         if (on) {
             // Glowing ring + AUTO micro-label.
             Canvas(Modifier.fillMaxSize()) {

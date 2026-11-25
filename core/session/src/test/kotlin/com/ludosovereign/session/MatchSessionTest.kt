@@ -17,6 +17,7 @@ import com.ludosovereign.engine.StateCodec
 import com.ludosovereign.engine.snl.SnakesAndLaddersEngine
 import com.ludosovereign.engine.snl.SnlLayouts
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -209,6 +210,111 @@ class MatchSessionTest {
         session.toggleAuto(7)
         assertTrue(session.ui.value.autoPlayers.isEmpty())
         job.cancel()
+    }
+
+    // ---- 1.4.0 -----------------------------------------------------------------------------------
+
+    @Test fun autoBotIsSingleUsePerMatch() = runTest {
+        val cfg = MatchConfig.create(BoardTopology.CLASSIC_4, RuleSet.classic(), listOf(human, human.copy(name = "Friend")))
+        val tokens = IntArray(8) { BASE }.also { it[0] = 10; it[1] = 20; it[4] = 20 }
+        var last: Checkpoint? = null
+        val session = MatchSession(GameState(cfg, tokens, 0, Phase.AWAITING_ROLL), bots = emptyMap(),
+            dice = ScriptedDice(3, 2, 4, 1, 3, 2, 4, 1), aiDispatcher = StandardTestDispatcher(testScheduler),
+            onCheckpoint = { last = it })
+        val job = session.start(this)
+        runCurrent()
+        assertTrue(session.canEnableAuto(0))
+        session.toggleAuto(0); advanceUntilIdle()           // first (and only) use
+        assertTrue(0 in session.ui.value.autoPlayers)
+        assertTrue(session.ui.value.autoSpent.isEmpty(), "still on, so not shown as spent yet")
+        session.toggleAuto(0); advanceUntilIdle()           // manual control resumed
+        assertFalse(0 in session.ui.value.autoPlayers)
+        assertEquals(setOf(0), session.ui.value.autoSpent, "toggle is revoked for the rest of the match")
+        assertFalse(session.canEnableAuto(0))
+        session.toggleAuto(0); advanceUntilIdle()           // a second tap does nothing
+        assertFalse(0 in session.ui.value.autoPlayers)
+        assertTrue(session.canEnableAuto(1), "other players keep their own chance")
+        job.cancel()
+        // The spent chance survives save and resume.
+        val restored = MatchSession.restore(assertNotNull(last), { emptyMap() }, SeededDice(1), SessionSettings(), {}, {})
+        assertEquals(setOf(0), restored.ui.value.autoSpent)
+        assertFalse(restored.canEnableAuto(0))
+    }
+
+    @Test fun autoBotUsesCasualLogicButAlwaysTakesTheCut() {
+        val cfg = MatchConfig.create(BoardTopology.CLASSIC_4, RuleSet.classic(), listOf(human, human.copy(name = "Friend")))
+        // Token 0 at 15 cuts Friend's lone pawn on cell 18 with a 3; token 1 at 30 would only advance.
+        val tokens = IntArray(8) { BASE }.also { it[0] = 15; it[1] = 30; it[4] = 44 }
+        val s = GameState(cfg, tokens, 0, Phase.AWAITING_MOVE, dice = 3)
+        repeat(50) { seed -> assertEquals(0, com.ludosovereign.ai.AutoPilotBot(Random(seed)).chooseMove(s), "seed $seed passed up the cut") }
+        assertEquals(BotTier.CASUAL, com.ludosovereign.ai.AutoPilotBot().tier)
+    }
+
+    @Test fun stackedSixesAddUpInTheSession() = runTest {
+        val cfg = MatchConfig.create(BoardTopology.CLASSIC_4, RuleSet.classic(), listOf(human, human.copy(name = "Friend")))
+        // One pawn just out on its start square; the other three are already Home, so every roll auto-moves it.
+        val h = BoardTopology.CLASSIC_4.homeProgress
+        val tokens = IntArray(8) { BASE }.also { it[0] = 0; it[1] = h; it[2] = h; it[3] = h }
+        val seen = ArrayList<Int>()
+        val session = MatchSession(GameState(cfg, tokens, 0, Phase.AWAITING_ROLL), bots = emptyMap(),
+            dice = ScriptedDice(6, 6, 3), aiDispatcher = StandardTestDispatcher(testScheduler),
+            onCheckpoint = { c -> seen += StateCodec.decodeGame(c.stateJson).tokens[0] })
+        val job = session.start(this)
+        runCurrent()
+        repeat(3) { session.roll(); advanceUntilIdle() }    // only one pawn can move: each roll auto-moves
+        val g = session.ui.value.game
+        assertEquals(15, g.tokens[0], "6 + 6 + 3 from the start square")
+        assertEquals(listOf(0, 6, 6, 12, 12, 15), seen, "every stacked six adds six tiles, never resets or loops back")
+        val moves = session.log.actions.filterIsInstance<com.ludosovereign.engine.GameAction.MoveToken>()
+        assertEquals(3, moves.size)
+        assertEquals(1, g.current)
+        job.cancel()
+    }
+
+    @Test fun botHoldsTheRolledFaceBeforeMoving() = runTest {
+        val cfg = MatchConfig.create(BoardTopology.CLASSIC_4, RuleSet.classic(), listOf(bot(BotTier.CASUAL), human))
+        val tokens = IntArray(8) { BASE }.also { it[0] = 10; it[1] = 20; it[4] = 30 }
+        val session = MatchSession(GameState(cfg, tokens, 0, Phase.AWAITING_ROLL),
+            bots = mapOf(0 to BotFactory.create(BotTier.CASUAL, Random(1))), dice = ScriptedDice(4),
+            aiDispatcher = StandardTestDispatcher(testScheduler), clock = { testScheduler.currentTime })
+        val t = SessionSettings().timings
+        val job = session.start(this)
+        runCurrent()
+        // The bot waits a beat before it picks up the dice.
+        testScheduler.advanceTimeBy(t.botThinkMs - 10); runCurrent()
+        assertEquals(-1, session.ui.value.rollingPlayer)
+        testScheduler.advanceTimeBy(20); runCurrent()
+        assertEquals(0, session.ui.value.rollingPlayer, "now tumbling")
+        testScheduler.advanceTimeBy(t.rollMs); runCurrent()
+        val rolledAt = testScheduler.currentTime
+        assertEquals(Phase.AWAITING_MOVE, session.ui.value.game.phase)
+        assertEquals(4, session.ui.value.game.dice, "the rolled number is on screen")
+        // The face stays up for settle + reveal before any pawn moves.
+        testScheduler.advanceTimeBy(t.settleMs + t.botRevealMs - 30); runCurrent()
+        assertEquals(Phase.AWAITING_MOVE, session.ui.value.game.phase, "still showing the number at +${testScheduler.currentTime - rolledAt} ms")
+        advanceUntilIdle()
+        assertEquals(1, session.ui.value.game.current)
+        assertTrue(t.botRevealMs >= 500, "a clearly visible pause")
+        job.cancel()
+    }
+
+    @Test fun lastPawnHomeShowsAllFourTicksInTheSameUpdate() = runTest {
+        val cfg = MatchConfig.create(BoardTopology.CLASSIC_4, RuleSet.classic().copy(playForAllPlacements = true),
+            listOf(bot(BotTier.CASUAL), human, human.copy(name = "C")))
+        val h = BoardTopology.CLASSIC_4.homeProgress
+        val tokens = IntArray(12) { BASE }.also { it[0] = h; it[1] = h; it[2] = h; it[3] = h - 2; it[4] = 10; it[8] = 12 }
+        val updates = ArrayList<LudoUiState>()
+        val session = MatchSession(GameState(cfg, tokens, 0, Phase.AWAITING_ROLL),
+            bots = mapOf(0 to BotFactory.create(BotTier.CASUAL, Random(1))), dice = ScriptedDice(2, 3, 1),
+            aiDispatcher = StandardTestDispatcher(testScheduler))
+        val collector = launch { session.ui.collect { updates += it } }
+        val job = session.start(this)
+        advanceUntilIdle()
+        val landing = updates.first { u -> u.lastEvents.any { it is com.ludosovereign.engine.GameEvent.TokenReachedHome } }
+        assertEquals(4, landing.game.tokensHome(0), "all four pawns are Home in the very update that lands the last one")
+        assertTrue(landing.lastEvents.any { it is com.ludosovereign.engine.GameEvent.PlayerFinished && it.player == 0 })
+        assertEquals(listOf(0), landing.game.finishOrder.toList())
+        collector.cancel(); job.cancel()
     }
 
     @Test fun matchContinuesAfterFirstFinisherAndCanEndEarly() = runTest {

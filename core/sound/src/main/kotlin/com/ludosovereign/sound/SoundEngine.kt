@@ -96,5 +96,5 @@ class SoundEngine(context: Context, private val scope: CoroutineScope) {
 
     private fun key(pack: String, e: SoundEvent) = "$pack/${e.name}"
 
-    companion object { const val SYNTH_VERSION = 1 }
+    companion object { const val SYNTH_VERSION = 2 }
 }

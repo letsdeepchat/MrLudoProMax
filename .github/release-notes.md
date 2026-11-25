@@ -2,7 +2,15 @@ Ludo Ultra Pro-Max (formerly Ludo Sovereign): 100% offline Ludo + Snakes & Ladde
 
 **Install:** download the APK below on your Android phone (Android 8.0+), open it, and allow "install unknown apps" for your browser or file manager when asked. If an earlier build is installed and the install fails, uninstall it first (test builds are signed with different debug keys).
 
-What's new in 1.3.0:
+What's new in 1.4.0:
+- **★ Unbeatable plays fairer dice:** it rolls normally now instead of picking a six every time. Its edge is a strike calculation: when one of its pawns is within a die roll of a human pawn that can be cut, it lands the exact number, aiming at the human pawn furthest along. It can roll **at most two sixes in a row**; a third roll in the same turn is always 1–5
+- **Stacked sixes fixed:** a pawn that rolls 6, 6 and then 3 now hops 0 → 6 → 12 → 15 every time. Before, a bonus roll could arrive while the pawn was still landing and the next hop replayed from the old square
+- **Auto-Bot is single-use:** each human player can hand their turns to the Auto-Bot once per match. After you take control back, the yard button greys out with a strike-through for the rest of the game (also after save and resume, and undo doesn't bring it back). The Auto-Bot now plays at Casual strength but never passes up a cut
+- **Bot turns are easier to follow:** bots pause briefly before rolling and hold the rolled number for about two-thirds of a second before the pawn moves (scales with the animation speed slider)
+- **Finish ticks show at once:** when the last pawn lands Home, all four ✓ marks and the four Home pips appear together; finished players keep their full pip row under the podium badge
+- **Sound Effect Pack Selector** in the Audio Studio with five profiles, each with its own dice, move, capture, safe-square and home sounds: **Casual Chimes (King-style)**, **Traditional**, **Modern Casual**, **Retro Arcade** and **Minimalist**. Every sound is synthesised on the device; the six older packs are still under "More packs"
+
+Earlier, in 1.3.0:
 - **New name:** Ludo Ultra Pro-Max, in every language. Podium titles: 1st **Ultra**, 2nd **Pro**, 3rd **Max**, 4th **Aspirant**
 - **Play on to the last player:** 3- and 4-player games continue after the first finisher until one player is left; finished players get their podium badge and are skipped. The pause menu can end the match early once someone has finished
 - **Match Statistics screen** after every match: standings, cuts made, times cut, missed cuts, safe landings, sixes, bonus turns, three-six forfeits and a per-player **Accuracy %** scored against the built-in engine

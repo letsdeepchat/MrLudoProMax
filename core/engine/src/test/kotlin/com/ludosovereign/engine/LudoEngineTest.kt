@@ -386,3 +386,44 @@ class CodecTest {
         assertEquals(s, decoded.replay())
     }
 }
+
+class StackedSixesTest {
+    @Test fun everyStackedSixAddsSixTiles() {
+        val cfg = config(2)
+        var s = stateOf(cfg, 0 to 0)
+        val events = ArrayList<GameEvent>()
+        s = s.rollAndMove(6, 0, events)
+        assertEquals(6, s.tokens[0]); assertEquals(0, s.current, "a six earns another roll")
+        s = s.rollAndMove(6, 0, events)
+        assertEquals(12, s.tokens[0]); assertEquals(2, s.consecutiveSixes)
+        s = s.rollAndMove(4, 0, events)
+        assertEquals(16, s.tokens[0]); assertEquals(1, s.current)
+        val moved = events.filterIsInstance<GameEvent.TokenMoved>()
+        assertEquals(listOf(0 to 6, 6 to 12, 12 to 16), moved.map { it.fromProgress to it.toProgress },
+            "each move starts where the previous one ended")
+    }
+
+    @Test fun stackedSixesFromBaseReleaseThenAdvance() {
+        val cfg = config(2)
+        var s = stateOf(cfg)
+        s = s.rollAndMove(6, 0)          // release onto the start square
+        assertEquals(0, s.tokens[0])
+        s = s.rollAndMove(6, 0)          // 0 -> 6
+        assertEquals(6, s.tokens[0])
+        s = s.rollAndMove(5, 0)          // 6 -> 11, turn passes
+        assertEquals(11, s.tokens[0]); assertEquals(1, s.current)
+    }
+
+    @Test fun stackedSixesNearHomeNeverOverflow() {
+        val cfg = config(2)
+        val home = cfg.topology.homeProgress
+        var s = stateOf(cfg, 0 to home - 13, 1 to 5)
+        s = s.rollAndMove(6, 0)
+        s = s.rollAndMove(6, 0)
+        assertEquals(home - 1, s.tokens[0])
+        val rolled = LudoEngine.roll(s.copy(consecutiveSixes = 0), 6)
+        assertTrue(0 !in LudoEngine.legalMoves(rolled).toList(), "a six past Home is not legal")
+        assertEquals(home - 1, rolled.tokens[0], "the pawn stays put; it never wraps or resets")
+    }
+}
+

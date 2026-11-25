@@ -11,4 +11,14 @@
     <string name="haptics">हॅप्टिक्स</string>
     <string name="haptics_on">कंपन प्रतिसाद</string>
     <string name="haptic_strength">तीव्रता</string>
+    <string name="sound_effect_pack">साउंड इफेक्ट पॅक</string>
+    <string name="more_packs">आणखी पॅक</string>
+    <string name="preview">ऐका</string>
+    <string name="cue_dice">फासा</string>
+    <string name="cue_move">चाल</string>
+    <string name="cue_capture">कापणे</string>
+    <string name="cue_safe">सुरक्षित घर</string>
+    <string name="cue_home">घर</string>
+    <string name="cue_six">सहा</string>
+    <string name="cue_win">विजय</string>
 </resources>
