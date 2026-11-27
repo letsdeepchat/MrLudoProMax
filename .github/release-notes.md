@@ -2,10 +2,16 @@ Ludo Ultra Pro-Max (formerly Ludo Sovereign): 100% offline Ludo + Snakes & Ladde
 
 **Install:** download the APK below on your Android phone (Android 8.0+), open it, and allow "install unknown apps" for your browser or file manager when asked. If an earlier build is installed and the install fails, uninstall it first (test builds are signed with different debug keys).
 
-What's new in 1.4.0:
+What's new in 1.5.0:
+- **1-second dice hold:** after every roll, human or bot, the rolled number stays on screen for a full second before any pawn can move (at every animation speed)
+- **Paced sixes:** no player rolls a 6 in their first 5 turns. Every player is guaranteed at least one 6 in turns 6 to 8: if no 6 came on turn 6 or 7, turn 8 opens with two 6s in a row (the third roll of that turn is never a 6, so the triple-six forfeit can't take them away). From turn 9 the dice are normal again
+- **Blue sits bottom-right:** default colours are now red top-left, green top-right, blue bottom-right and yellow bottom-left, in every theme (2P games are red vs blue)
+- **Unbeatable Auto-Bot for 100 seconds:** the one-time Auto-Bot now plays at ★ Unbeatable strength with boosted dice (it picks the cutting number, or the most useful one: Home, home lane, release, safe square). It switches itself off after 100 seconds and hands the turn back to you
+
+Earlier, in 1.4.0:
 - **★ Unbeatable plays fairer dice:** it rolls normally now instead of picking a six every time. Its edge is a strike calculation: when one of its pawns is within a die roll of a human pawn that can be cut, it lands the exact number, aiming at the human pawn furthest along. It can roll **at most two sixes in a row**; a third roll in the same turn is always 1–5
 - **Stacked sixes fixed:** a pawn that rolls 6, 6 and then 3 now hops 0 → 6 → 12 → 15 every time. Before, a bonus roll could arrive while the pawn was still landing and the next hop replayed from the old square
-- **Auto-Bot is single-use:** each human player can hand their turns to the Auto-Bot once per match. After you take control back, the yard button greys out with a strike-through for the rest of the game (also after save and resume, and undo doesn't bring it back). The Auto-Bot now plays at Casual strength but never passes up a cut
+- **Auto-Bot is single-use:** each human player can hand their turns to the Auto-Bot once per match. After you take control back, the yard button greys out with a strike-through for the rest of the game (also after save and resume, and undo doesn't bring it back). The Auto-Bot played at Casual strength but never passed up a cut
 - **Bot turns are easier to follow:** bots pause briefly before rolling and hold the rolled number for about two-thirds of a second before the pawn moves (scales with the animation speed slider)
 - **Finish ticks show at once:** when the last pawn lands Home, all four ✓ marks and the four Home pips appear together; finished players keep their full pip row under the podium badge
 - **Sound Effect Pack Selector** in the Audio Studio with five profiles, each with its own dice, move, capture, safe-square and home sounds: **Casual Chimes (King-style)**, **Traditional**, **Modern Casual**, **Retro Arcade** and **Minimalist**. Every sound is synthesised on the device; the six older packs are still under "More packs"

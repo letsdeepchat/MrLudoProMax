@@ -1,5 +1,6 @@
 package com.ludosovereign.feature.board
 
+import com.ludosovereign.designsystem.BoardThemes
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloatAsState
@@ -239,7 +240,7 @@ private fun CornerPod(seat: Int, s: LudoUiState, mirrored: Boolean, hex: Boolean
     val used = player >= 0
     val active = used && player == game.current && s.turnPhase != TurnPhase.GAME_OVER
     val idle = remember(game.config) { idleSeatColors(game) }
-    val color = if (used) theme.tokenColor(game.config.players[player].colorIndex, cb) else theme.tokenColor(idle[seat] ?: seat, cb)
+    val color = if (used) theme.tokenColor(game.config.players[player].colorIndex, cb) else theme.tokenColor(idle[seat] ?: BoardThemes.seatColorIndex(seat), cb)
     val inf = rememberInfiniteTransition(label = "pod")
     val glow by inf.animateFloat(0.35f, 1f, infiniteRepeatable(tween(650), RepeatMode.Reverse), label = "glow")
     val bounce by inf.animateFloat(0f, 1f, infiniteRepeatable(tween(420), RepeatMode.Reverse), label = "bounce")

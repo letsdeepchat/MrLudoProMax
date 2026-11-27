@@ -19,8 +19,8 @@ android {
         applicationId = "com.ludosovereign"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
-        versionName = "1.4.0"
+        versionCode = 6
+        versionName = "1.5.0"
         // Ship only the languages we translate (also trims library strings and the generated locale list).
         resourceConfigurations += listOf("en", "hi", "ta", "te", "kn", "mr", "gu", "bn", "ml", "es", "ar", "fr")
     }

@@ -51,6 +51,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -148,6 +149,14 @@ fun SetupScreen(
 
     val maxPlayers = if (type == GameType.SNAKES) 6 else board.seats
     if (count > maxPlayers) count = maxPlayers
+    // Until the user picks colours, each player gets the colour of the yard they will sit in
+    // (blue bottom-right, yellow bottom-left on the cross board).
+    var colorsTouched by remember { mutableStateOf(false) }
+    LaunchedEffect(type, board, count) {
+        if (colorsTouched) return@LaunchedEffect
+        if (type == GameType.SNAKES) rows.forEachIndexed { i, r -> r.color = i }
+        else board.seatsFor(count).forEachIndexed { i, seat -> rows[i].color = BoardThemes.seatColorIndex(seat) }
+    }
     val teamValid = variant != Variant.TEAM_UP || count == 4 || (count == 6 && board == BoardTopology.HEX_6)
     val active = rows.take(count)
     val allHuman = active.all { it.kind == PlayerKind.HUMAN }
@@ -161,6 +170,7 @@ fun SetupScreen(
 
     /** Next colour; if another active seat already has it, the two swap so colours never collide. */
     fun cycleColor(i: Int) {
+        colorsTouched = true
         val r = rows[i]
         val next = (r.color + 1) % 6
         rows.take(count).withIndex().firstOrNull { it.index != i && it.value.color == next }?.value?.color = r.color

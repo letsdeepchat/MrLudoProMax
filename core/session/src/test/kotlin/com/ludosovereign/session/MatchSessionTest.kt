@@ -199,7 +199,8 @@ class MatchSessionTest {
         assertTrue(0 in session.ui.value.autoPlayers)
         assertEquals(1, session.ui.value.game.current)
         assertTrue(session.ui.value.awaitingHuman)
-        assertEquals(1, session.log.actions.count { it is com.ludosovereign.engine.GameAction.MoveToken })
+        // The boosted Auto-Bot may pick a six or a cut and earn bonus moves, but it always moves at least once.
+        assertTrue(session.log.actions.count { it is com.ludosovereign.engine.GameAction.MoveToken } >= 1)
         // Back from the break: hand control back before your next turn.
         session.toggleAuto(0); advanceUntilIdle()
         assertFalse(0 in session.ui.value.autoPlayers)
@@ -289,12 +290,12 @@ class MatchSessionTest {
         val rolledAt = testScheduler.currentTime
         assertEquals(Phase.AWAITING_MOVE, session.ui.value.game.phase)
         assertEquals(4, session.ui.value.game.dice, "the rolled number is on screen")
-        // The face stays up for settle + reveal before any pawn moves.
-        testScheduler.advanceTimeBy(t.settleMs + t.botRevealMs - 30); runCurrent()
+        // The face stays up for the mandatory 1 s reveal before any pawn moves.
+        testScheduler.advanceTimeBy(AnimationTimings.DICE_REVEAL_MS - 30); runCurrent()
         assertEquals(Phase.AWAITING_MOVE, session.ui.value.game.phase, "still showing the number at +${testScheduler.currentTime - rolledAt} ms")
         advanceUntilIdle()
         assertEquals(1, session.ui.value.game.current)
-        assertTrue(t.botRevealMs >= 500, "a clearly visible pause")
+        assertEquals(1000L, AnimationTimings.DICE_REVEAL_MS, "a full one-second pause")
         job.cancel()
     }
 
@@ -391,5 +392,90 @@ class MatchSessionTest {
         assertEquals(Progression.Rank.KNIGHT, Progression.rankFor(1000))
         assertEquals(Progression.Rank.PRO_MAX, Progression.rankFor(50_000))
         assertTrue(Progression.xpFor(PlayerMatchStats(captures = 2), 1, 4) > Progression.xpFor(PlayerMatchStats(), 4, 4))
+    }
+
+    // ---- 1.5.0: dice pacing, guaranteed sixes, boosted Auto-Bot ----------------------------------
+
+    @Test fun guaranteedSixesFollowTheTurnScheduleInALiveMatch() = runTest {
+        val cfg = MatchConfig.create(BoardTopology.CLASSIC_4, RuleSet.classic(),
+            listOf(bot(BotTier.CASUAL), bot(BotTier.CASUAL)))
+        val bots = cfg.players.indices.associateWith { BotFactory.create(BotTier.CASUAL, Random(it), budgetMs = 3) }
+        val session = MatchSession(LudoEngine.newGame(cfg), bots = bots, dice = SeededDice(11),
+            settings = SessionSettings(guaranteedSixes = true), aiDispatcher = StandardTestDispatcher(testScheduler),
+            scheduleRandom = Random(5))
+        val job = session.start(this)
+        // Run long enough for both players to pass turn 8.
+        while (session.ui.value.stats.sixSchedule.turns.let { it.size < 2 || it.min() < 9 }) {
+            testScheduler.advanceTimeBy(200); runCurrent()
+        }
+        job.cancel()
+        // Rebuild per-player turn numbers from the log and check the rule.
+        val replay = session.log.actions.filterIsInstance<com.ludosovereign.engine.GameAction.Roll>().map { it.value }
+        var g = LudoEngine.newGame(cfg)
+        val turn = IntArray(2); var last = -1
+        val sixTurns = Array(2) { ArrayList<Int>() }
+        for (a in session.log.actions) {
+            if (a is com.ludosovereign.engine.GameAction.Roll) {
+                if (g.current != last) { turn[g.current]++; last = g.current }
+                if (a.value == 6) sixTurns[g.current] += turn[g.current]
+            }
+            g = LudoEngine.reduce(g, a)
+        }
+        assertTrue(replay.isNotEmpty())
+        for (p in 0..1) {
+            assertTrue(sixTurns[p].none { it <= 5 }, "player $p: six in turns 1-5 ${sixTurns[p]}")
+            assertTrue(sixTurns[p].any { it in 6..8 }, "player $p: no six in turns 6-8 ${sixTurns[p]}")
+        }
+    }
+
+    @Test fun humanRollHoldsTheFaceForOneSecond() = runTest {
+        val cfg = MatchConfig.create(BoardTopology.CLASSIC_4, RuleSet.classic(), listOf(human, human.copy(name = "Friend")))
+        val tokens = IntArray(8) { BASE }.also { it[0] = 10; it[1] = 20 }
+        val session = MatchSession(GameState(cfg, tokens, 0, Phase.AWAITING_ROLL), bots = emptyMap(),
+            dice = ScriptedDice(3), aiDispatcher = StandardTestDispatcher(testScheduler))
+        val job = session.start(this)
+        runCurrent()
+        session.roll(); runCurrent()
+        testScheduler.advanceTimeBy(SessionSettings().timings.rollMs + 1); runCurrent()
+        assertEquals(3, session.ui.value.game.dice, "the face is on screen")
+        testScheduler.advanceTimeBy(AnimationTimings.DICE_REVEAL_MS - 20); runCurrent()
+        assertEquals(TurnPhase.NEXT_TURN, session.ui.value.turnPhase, "no pawn may be picked during the 1 s hold")
+        testScheduler.advanceTimeBy(40); runCurrent()
+        assertEquals(TurnPhase.SELECTING_TOKEN, session.ui.value.turnPhase)
+        job.cancel()
+    }
+
+    @Test fun autoBotSwitchesOffAfterOneHundredSeconds() = runTest {
+        val cfg = MatchConfig.create(BoardTopology.CLASSIC_4, RuleSet.classic(), listOf(human, bot(BotTier.CASUAL)))
+        val tokens = IntArray(8) { BASE }.also { it[0] = 10; it[1] = 20; it[4] = 20 }
+        val session = MatchSession(GameState(cfg, tokens, 0, Phase.AWAITING_ROLL),
+            bots = mapOf(1 to BotFactory.create(BotTier.CASUAL, Random(1), budgetMs = 3)), dice = SeededDice(3),
+            aiDispatcher = StandardTestDispatcher(testScheduler), clock = { testScheduler.currentTime })
+        val job = session.start(this)
+        runCurrent()
+        session.toggleAuto(0); runCurrent()
+        assertEquals(MatchSession.AUTO_BOT_LIMIT_MS, session.ui.value.autoEndsAtMs.getValue(0) - testScheduler.currentTime)
+        testScheduler.advanceTimeBy(MatchSession.AUTO_BOT_LIMIT_MS - 5_000); runCurrent()
+        assertTrue(0 in session.ui.value.autoPlayers, "still playing before 100 s")
+        // Past the limit the Auto-Bot hands control back at the next decision and stays spent.
+        var waited = 0L
+        while (!session.ui.value.awaitingHuman && waited < 30_000) { testScheduler.advanceTimeBy(100); runCurrent(); waited += 100 }
+        assertFalse(0 in session.ui.value.autoPlayers)
+        assertTrue(session.ui.value.awaitingHuman)
+        assertEquals(setOf(0), session.ui.value.autoSpent)
+        assertFalse(session.canEnableAuto(0))
+        job.cancel()
+    }
+
+    @Test fun boostedAutoBotPicksTheCuttingFaceAgainstAnyOpponent() {
+        val cfg = MatchConfig.create(BoardTopology.CLASSIC_4, RuleSet.classic(), listOf(human, bot(BotTier.CASUAL)))
+        // Token 0 on cell 15; the bot's lone pawn sits 4 ahead on cell 19 (seat 2 progress 45 = cell 19).
+        val tokens = IntArray(8) { BASE }.also { it[0] = 15; it[4] = 45 }
+        val s = GameState(cfg, tokens, 0, Phase.AWAITING_ROLL)
+        repeat(20) { seed ->
+            assertEquals(4, com.ludosovereign.ai.UnbeatableEngine(random = Random(seed), boosted = true).chooseDice(s))
+        }
+        // Without the boost the Unbeatable bot only aims at humans, so this bot victim is not targeted on purpose.
+        assertTrue((0 until 20).map { com.ludosovereign.ai.UnbeatableEngine(random = Random(it)).chooseDice(s) }.toSet().size > 1)
     }
 }

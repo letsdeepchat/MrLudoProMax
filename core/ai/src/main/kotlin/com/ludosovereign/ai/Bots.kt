@@ -78,6 +78,11 @@ class UnbeatableEngine(
     private val budgetMs: Long = BotFactory.BUDGET_MS,
     evaluator: HeuristicEvaluator = HeuristicEvaluator(),
     private val random: Random = SecureRandom().asKotlinRandom(),
+    /**
+     * Auto-Bot boost for a human on a break: dice strikes at any opponent, and when no cut is in
+     * reach the face whose best move scores highest (Home, home stretch, release, safety, progress).
+     */
+    private val boosted: Boolean = false,
 ) : LudoBot {
     override val tier = BotTier.UNBEATABLE
     private val search = ExpectimaxSearch(evaluator)
@@ -85,10 +90,26 @@ class UnbeatableEngine(
 
     override fun chooseDice(state: GameState): Int {
         require(state.phase == Phase.AWAITING_ROLL)
+        if (boosted) return StrikeFinder.bestStrike(state, humansOnly = false)?.dice ?: bestFace(state)
         val strike = StrikeFinder.bestStrike(state, humansOnly = true)
             ?: StrikeFinder.bestStrike(state, humansOnly = false).takeIf { !state.config.players.any { it.kind == PlayerKind.HUMAN } }
         val value = strike?.dice ?: random.nextInt(1, 7)
         return capSixes(state, value, random)
+    }
+
+    /** The face (never a third six) whose best one-ply move scores highest; ties broken at random. */
+    private fun bestFace(state: GameState): Int {
+        var best = Int.MIN_VALUE
+        val faces = ArrayList<Int>()
+        for (d in 1..6) {
+            if (d == 6 && state.consecutiveSixes >= MAX_CONSECUTIVE_SIXES) continue
+            val rolled = LudoEngine.roll(state, d)
+            val score = if (rolled.phase != Phase.AWAITING_MOVE || rolled.current != state.current) -5_000
+            else (LudoEngine.legalMoves(rolled).maxOfOrNull { MoveScorer.score(rolled, it) } ?: -5_000) + if (d == 6) 250 else 0
+            if (score > best) { best = score; faces.clear() }
+            if (score == best) faces += d
+        }
+        return faces[random.nextInt(faces.size)]
     }
 
     override fun chooseMove(state: GameState): Int {

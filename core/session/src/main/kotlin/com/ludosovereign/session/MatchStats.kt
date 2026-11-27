@@ -3,6 +3,7 @@ package com.ludosovereign.session
 import com.ludosovereign.engine.GameEvent
 import com.ludosovereign.engine.GameState
 import com.ludosovereign.engine.MatchConfig
+import com.ludosovereign.engine.SixScheduleState
 import kotlinx.serialization.Serializable
 
 /** Per-player counters for one match, folded from [GameEvent]s. */
@@ -33,7 +34,11 @@ data class PlayerMatchStats(
 }
 
 @Serializable
-data class MatchStats(val players: List<PlayerMatchStats>) {
+data class MatchStats(
+    val players: List<PlayerMatchStats>,
+    /** Turn ledger for the guaranteed-six pacing; saved with the stats so it survives save and resume. */
+    val sixSchedule: SixScheduleState = SixScheduleState(),
+) {
     companion object {
         fun empty(config: MatchConfig) = MatchStats(List(config.playerCount) { PlayerMatchStats() })
     }
@@ -49,11 +54,11 @@ data class MatchStats(val players: List<PlayerMatchStats>) {
             it.copy(decisions = it.decisions + 1, accuracySum = it.accuracySum + accuracy.coerceIn(0.0, 1.0),
                 missedCuts = it.missedCuts + if (missedCut) 1 else 0)
         }
-        return MatchStats(p)
+        return copy(players = p)
     }
 
     fun markAutoBotUsed(player: Int): MatchStats =
-        MatchStats(players.mapIndexed { i, p -> if (i == player) p.copy(autoBotUsed = true) else p })
+        copy(players = players.mapIndexed { i, p -> if (i == player) p.copy(autoBotUsed = true) else p })
 
     fun fold(before: GameState, events: List<GameEvent>): MatchStats {
         val p = players.toMutableList()
@@ -79,7 +84,7 @@ data class MatchStats(val players: List<PlayerMatchStats>) {
             is GameEvent.TokenReachedHome -> upd(before.ownerOf(e.tokenId)) { it.copy(tokensHome = it.tokensHome + 1) }
             else -> Unit
         }
-        return MatchStats(p)
+        return copy(players = p)
     }
 }
 
