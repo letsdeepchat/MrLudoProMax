@@ -71,7 +71,7 @@ fun achievements(s: ProfileStatsEntity?, xp: Int): List<Achievement> {
         Achievement("Untouchable", "Win without losing a single token", st.flawlessWins >= 1),
         Achievement("Giant Slayer", "Beat a lineup that includes the Unbeatable engine", st.unbeatableWins >= 1),
         Achievement("Snake Charmer", "Win at Snakes & Ladders", st.snlWins >= 1),
-        Achievement("Pro-Max", "Reach the Pro-Max rank", Progression.rankFor(xp) == Progression.Rank.PRO_MAX),
+        Achievement("Ultra", "Reach the Ultra rank", Progression.rankFor(xp) == Progression.Rank.ULTRA),
     )
 }
 

@@ -92,7 +92,7 @@ data class MatchStats(
 object Progression {
     enum class Rank(val minXp: Int, val title: String) {
         PAWN(0, "Pawn"), SQUIRE(300, "Squire"), KNIGHT(900, "Knight"), BARON(2000, "Baron"), DUKE(4000, "Duke"),
-        MONARCH(7500, "Monarch"), PRO_MAX(12000, "Pro-Max");
+        MONARCH(7500, "Monarch"), ULTRA(12000, "Ultra");
     }
 
     fun xpFor(stats: PlayerMatchStats, place: Int, playerCount: Int): Int {

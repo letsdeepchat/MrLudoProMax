@@ -290,12 +290,12 @@ class MatchSessionTest {
         val rolledAt = testScheduler.currentTime
         assertEquals(Phase.AWAITING_MOVE, session.ui.value.game.phase)
         assertEquals(4, session.ui.value.game.dice, "the rolled number is on screen")
-        // The face stays up for the mandatory 1 s reveal before any pawn moves.
+        // The face stays up for the mandatory 1.2 s reveal before any pawn moves.
         testScheduler.advanceTimeBy(AnimationTimings.DICE_REVEAL_MS - 30); runCurrent()
         assertEquals(Phase.AWAITING_MOVE, session.ui.value.game.phase, "still showing the number at +${testScheduler.currentTime - rolledAt} ms")
         advanceUntilIdle()
         assertEquals(1, session.ui.value.game.current)
-        assertEquals(1000L, AnimationTimings.DICE_REVEAL_MS, "a full one-second pause")
+        assertTrue(AnimationTimings.DICE_REVEAL_MS in 1000L..1500L, "a 1 to 1.5 second pause")
         job.cancel()
     }
 
@@ -390,7 +390,7 @@ class MatchSessionTest {
     @Test fun progressionRanks() {
         assertEquals(Progression.Rank.PAWN, Progression.rankFor(0))
         assertEquals(Progression.Rank.KNIGHT, Progression.rankFor(1000))
-        assertEquals(Progression.Rank.PRO_MAX, Progression.rankFor(50_000))
+        assertEquals(Progression.Rank.ULTRA, Progression.rankFor(50_000))
         assertTrue(Progression.xpFor(PlayerMatchStats(captures = 2), 1, 4) > Progression.xpFor(PlayerMatchStats(), 4, 4))
     }
 
@@ -428,7 +428,7 @@ class MatchSessionTest {
         }
     }
 
-    @Test fun humanRollHoldsTheFaceForOneSecond() = runTest {
+    @Test fun humanRollHoldsTheFaceBeforeAnyMove() = runTest {
         val cfg = MatchConfig.create(BoardTopology.CLASSIC_4, RuleSet.classic(), listOf(human, human.copy(name = "Friend")))
         val tokens = IntArray(8) { BASE }.also { it[0] = 10; it[1] = 20 }
         val session = MatchSession(GameState(cfg, tokens, 0, Phase.AWAITING_ROLL), bots = emptyMap(),
@@ -439,7 +439,7 @@ class MatchSessionTest {
         testScheduler.advanceTimeBy(SessionSettings().timings.rollMs + 1); runCurrent()
         assertEquals(3, session.ui.value.game.dice, "the face is on screen")
         testScheduler.advanceTimeBy(AnimationTimings.DICE_REVEAL_MS - 20); runCurrent()
-        assertEquals(TurnPhase.NEXT_TURN, session.ui.value.turnPhase, "no pawn may be picked during the 1 s hold")
+        assertEquals(TurnPhase.NEXT_TURN, session.ui.value.turnPhase, "no pawn may be picked during the 1.2 s hold")
         testScheduler.advanceTimeBy(40); runCurrent()
         assertEquals(TurnPhase.SELECTING_TOKEN, session.ui.value.turnPhase)
         job.cancel()
@@ -477,5 +477,26 @@ class MatchSessionTest {
         }
         // Without the boost the Unbeatable bot only aims at humans, so this bot victim is not targeted on purpose.
         assertTrue((0 until 20).map { com.ludosovereign.ai.UnbeatableEngine(random = Random(it)).chooseDice(s) }.toSet().size > 1)
+    }
+
+    // ---- 1.6.0 -----------------------------------------------------------------------------------
+
+    @Test fun openingRollWithNoMoveStillHoldsTheFace() = runTest {
+        // Opening phase: every pawn in the yard and a non-six, so there is nothing to move.
+        val cfg = MatchConfig.create(BoardTopology.CLASSIC_4, RuleSet.classic(), listOf(human, human.copy(name = "Friend")))
+        val session = MatchSession(LudoEngine.newGame(cfg), bots = emptyMap(), dice = ScriptedDice(3),
+            aiDispatcher = StandardTestDispatcher(testScheduler))
+        val job = session.start(this)
+        runCurrent()
+        session.roll(); runCurrent()
+        testScheduler.advanceTimeBy(SessionSettings().timings.rollMs + 1); runCurrent()
+        assertEquals(1, session.ui.value.game.current, "the turn has passed in the engine")
+        testScheduler.advanceTimeBy(AnimationTimings.DICE_REVEAL_MS - 20); runCurrent()
+        assertFalse(session.ui.value.awaitingHuman, "Friend is not asked to roll while the 3 is still on show")
+        assertEquals(0, session.ui.value.turnPlayer, "the board still shows the roller's pod and number")
+        advanceUntilIdle()
+        assertTrue(session.ui.value.awaitingHuman)
+        assertEquals(1, session.ui.value.turnPlayer)
+        job.cancel()
     }
 }

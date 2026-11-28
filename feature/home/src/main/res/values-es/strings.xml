@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_title">Ludo Ultra Pro-Max</string>
+    <string name="app_title">Ludo Ultra</string>
     <string name="settings">Ajustes</string>
     <string name="quick_resume">Continuar rápido</string>
     <string name="resume">Continuar</string>

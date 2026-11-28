@@ -83,7 +83,15 @@ data class LudoUiState(
     val autoSpent: Set<Int> = emptySet(),
     val stats: MatchStats,
     val result: MatchResult? = null,
-)
+    /** Player whose settled dice face is on show during the post-roll hold, or -1. */
+    val revealingPlayer: Int = -1,
+) {
+    /**
+     * Whose turn the board should show: the roller while their number is on show (even when the
+     * engine already passed the turn because the roll had no move), otherwise [GameState.current].
+     */
+    val turnPlayer: Int get() = if (revealingPlayer >= 0) revealingPlayer else game.current
+}
 
 /**
  * Orchestrates one Ludo match: human intents, bot turns (computed on [aiDispatcher] while the dice
@@ -252,7 +260,7 @@ class MatchSession(
 
     /**
      * Tumbles the dice for [rollMs], applies the roll (shaped by [SixSchedule] when enabled), then
-     * holds the settled face for [AnimationTimings.DICE_REVEAL_MS] (1 s, every player, every speed)
+     * holds the settled face for [AnimationTimings.DICE_REVEAL_MS] (1.2 s, every player, every phase, every speed)
      * before any pawn may move.
      */
     private suspend fun rollDice(player: Int, value: suspend () -> Int) {
@@ -272,7 +280,10 @@ class MatchSession(
             out.value
         } else raw
         val events = apply(GameAction.Roll(v), TurnPhase.NEXT_TURN)
+        // Keep the roller's pod and number up for the whole hold, including a roll with no move.
+        _ui.update { it.copy(revealingPlayer = player) }
         delay(maxOf(AnimationTimings.DICE_REVEAL_MS, t.settleMs))
+        _ui.update { it.copy(revealingPlayer = -1) }
         if (game.phase != Phase.AWAITING_MOVE) delay(t.turnGapMs + if (events.any { it is GameEvent.TripleSixForfeit }) t.impactMs * 3 else 0)
     }
 
