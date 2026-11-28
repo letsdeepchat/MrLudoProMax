@@ -1,6 +1,6 @@
 package com.ludosovereign.session
 
-import com.ludosovereign.ai.AutoPilotBot
+import com.ludosovereign.ai.UnbeatableEngine
 import com.ludosovereign.ai.LudoBot
 import com.ludosovereign.ai.MoveAnalysis
 import com.ludosovereign.ai.MoveScorer
@@ -12,6 +12,7 @@ import com.ludosovereign.engine.LudoEngine
 import com.ludosovereign.engine.MatchLog
 import com.ludosovereign.engine.Phase
 import com.ludosovereign.engine.PlayerKind
+import com.ludosovereign.engine.SixSchedule
 import com.ludosovereign.engine.StateCodec
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.random.Random
 
 data class SessionSettings(
     /** Play the only legal move automatically. */
@@ -43,6 +45,11 @@ data class SessionSettings(
     val fastAnimations: Boolean = false,
     /** User animation speed: 1 = normal, 2 = twice as fast. */
     val animationSpeed: Float = 1f,
+    /**
+     * Ludo six pacing ([SixSchedule]): no six in a player's turns 1–5, a guaranteed six in turns 6–8.
+     * On in the app; off by default so engine-level tests can script raw dice.
+     */
+    val guaranteedSixes: Boolean = false,
 ) {
     val rollMs get() = if (fastAnimations) rollAnimationMs / 2 else rollAnimationMs
     val moveMs get() = if (fastAnimations) moveAnimationMs / 2 else moveAnimationMs
@@ -70,11 +77,21 @@ data class LudoUiState(
     val paused: Boolean = false,
     /** Human players whose turns the Auto-Bot is currently playing (AFK / break mode). */
     val autoPlayers: Set<Int> = emptySet(),
+    /** [MatchSession] clock time at which each active Auto-Bot hands control back (100 s after enabling). */
+    val autoEndsAtMs: Map<Int, Long> = emptyMap(),
     /** Human players who already used their one Auto-Bot chance and have taken control back. */
     val autoSpent: Set<Int> = emptySet(),
     val stats: MatchStats,
     val result: MatchResult? = null,
-)
+    /** Player whose settled dice face is on show during the post-roll hold, or -1. */
+    val revealingPlayer: Int = -1,
+) {
+    /**
+     * Whose turn the board should show: the roller while their number is on show (even when the
+     * engine already passed the turn because the roll had no move), otherwise [GameState.current].
+     */
+    val turnPlayer: Int get() = if (revealingPlayer >= 0) revealingPlayer else game.current
+}
 
 /**
  * Orchestrates one Ludo match: human intents, bot turns (computed on [aiDispatcher] while the dice
@@ -93,7 +110,13 @@ class MatchSession(
     private val onCheckpoint: suspend (Checkpoint) -> Unit = {},
     private val onFinished: suspend (MatchResult) -> Unit = {},
     /** Casual-strength, capture-first bot that plays for a human on a break. */
-    private val autoBotFactory: () -> LudoBot = { AutoPilotBot() },
+    /**
+     * Unbeatable-strength bot with boosted dice that plays for a human on a break. It is single-use
+     * and switches itself off [AUTO_BOT_LIMIT_MS] after it was enabled.
+     */
+    private val autoBotFactory: () -> LudoBot = { UnbeatableEngine(boosted = true) },
+    /** Replaces a banned six with a uniform 1..5 under [SessionSettings.guaranteedSixes]. */
+    private val scheduleRandom: Random = Random.Default,
 ) {
     private sealed interface Intent {
         data object Roll : Intent
@@ -112,6 +135,8 @@ class MatchSession(
     private var seq = 0L
     private var job: Job? = null
     private val autoPlayers = LinkedHashSet<Int>()
+    /** [clock] time at which each active Auto-Bot switches itself off. */
+    private val autoEndsAt = HashMap<Int, Long>()
     private val autoBot: LudoBot by lazy { autoBotFactory() }
     private var endRequested = false
 
@@ -145,13 +170,28 @@ class MatchSession(
         if (player !in game.config.players.indices || game.config.players[player].kind != PlayerKind.HUMAN) return
         if (player in autoPlayers) {
             autoPlayers.remove(player)
+            autoEndsAt.remove(player)
         } else {
             if (stats.players[player].autoBotUsed) return
             autoPlayers.add(player)
+            autoEndsAt[player] = clock() + AUTO_BOT_LIMIT_MS
             stats = stats.markAutoBotUsed(player)
         }
-        _ui.update { it.copy(autoPlayers = autoPlayers.toSet(), autoSpent = spentFrom(stats) - autoPlayers, stats = stats) }
+        publishAuto()
         intents.trySend(Intent.Wake)
+    }
+
+    private fun publishAuto() =
+        _ui.update { it.copy(autoPlayers = autoPlayers.toSet(), autoSpent = spentFrom(stats) - autoPlayers, stats = stats,
+            autoEndsAtMs = autoEndsAt.toMap()) }
+
+    /** Hands control back to every player whose Auto-Bot has run for [AUTO_BOT_LIMIT_MS]. */
+    private fun expireAutoBots() {
+        val now = clock()
+        val expired = autoEndsAt.filterValues { now >= it }.keys
+        if (expired.isEmpty()) return
+        autoPlayers.removeAll(expired); expired.forEach(autoEndsAt::remove)
+        publishAuto()
     }
 
     /** True while [player] may still switch the Auto-Bot on. */
@@ -191,6 +231,7 @@ class MatchSession(
         while (game.phase != Phase.GAME_OVER && !endRequested) {
             awaitUnpaused()
             if (endRequested) break
+            expireAutoBots()
             val bot = botFor(game.current)
             if (bot != null) {
                 if (_ui.value.awaitingHuman) setPhase(_ui.value.turnPhase)
@@ -217,19 +258,32 @@ class MatchSession(
         if (game.phase != Phase.GAME_OVER) setPhase(TurnPhase.NEXT_TURN)
     }
 
-    /** Tumbles the dice for [rollMs], applies the roll, then holds on the settled face. */
+    /**
+     * Tumbles the dice for [rollMs], applies the roll (shaped by [SixSchedule] when enabled), then
+     * holds the settled face for [AnimationTimings.DICE_REVEAL_MS] (1.2 s, every player, every phase, every speed)
+     * before any pawn may move.
+     */
     private suspend fun rollDice(player: Int, value: suspend () -> Int) {
         _ui.update {
             it.copy(rollingPlayer = player, awaitingHuman = false, legalMoves = IntArray(0), turnDeadlineAtMs = null,
                 turnPhase = TurnPhase.ROLLING_DICE, timings = t)
         }
-        val v = coroutineScope {
+        val raw = coroutineScope {
             val pick = async { value() }
             delay(t.rollMs)
             pick.await()
         }
+        val v = if (settings.guaranteedSixes) {
+            val out = SixSchedule.roll(stats.sixSchedule, player, game.config.playerCount, raw,
+                game.rules.tripleSixForfeit) { scheduleRandom.nextInt(1, 6) }
+            stats = stats.copy(sixSchedule = out.state)
+            out.value
+        } else raw
         val events = apply(GameAction.Roll(v), TurnPhase.NEXT_TURN)
-        delay(t.settleMs)
+        // Keep the roller's pod and number up for the whole hold, including a roll with no move.
+        _ui.update { it.copy(revealingPlayer = player) }
+        delay(maxOf(AnimationTimings.DICE_REVEAL_MS, t.settleMs))
+        _ui.update { it.copy(revealingPlayer = -1) }
         if (game.phase != Phase.AWAITING_MOVE) delay(t.turnGapMs + if (events.any { it is GameEvent.TripleSixForfeit }) t.impactMs * 3 else 0)
     }
 
@@ -241,9 +295,8 @@ class MatchSession(
                 // A visible beat before the bot picks up the dice.
                 delay(t.botThinkMs)
                 awaitUnpaused()
+                // rollDice holds the settled face for a full second before the pawn moves.
                 rollDice(player) { withContext(aiDispatcher) { bot.chooseDice(snapshot) } ?: dice.roll() }
-                // Hold the settled face so everyone can read the number before the pawn moves.
-                if (game.phase == Phase.AWAITING_MOVE) delay(t.botRevealMs)
             }
             Phase.AWAITING_MOVE -> {
                 val snapshot = game
@@ -334,7 +387,9 @@ class MatchSession(
         // Undo rewinds the move, never the spent Auto-Bot chance.
         val spent = stats
         game = point.first; matchLog = point.second
-        stats = MatchStats(point.third.players.mapIndexed { i, p -> p.copy(autoBotUsed = p.autoBotUsed || spent.players[i].autoBotUsed) })
+        // Rolls are never undone either, so the six-pacing ledger stays where it is.
+        stats = MatchStats(point.third.players.mapIndexed { i, p -> p.copy(autoBotUsed = p.autoBotUsed || spent.players[i].autoBotUsed) },
+            spent.sixSchedule)
         publish(emptyList(), TurnPhase.NEXT_TURN)
         checkpoint()
     }
@@ -409,6 +464,9 @@ class MatchSession(
     }
 
     companion object {
+        /** The one-time Auto-Bot (Unbeatable moves + boosted dice) runs for at most 100 seconds. */
+        const val AUTO_BOT_LIMIT_MS = 100_000L
+
         /** Rebuilds a session from an auto-save checkpoint. */
         fun restore(
             checkpoint: Checkpoint,

@@ -1,5 +1,6 @@
 package com.ludosovereign.feature.board
 
+import com.ludosovereign.designsystem.BoardThemes
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloatAsState
@@ -113,7 +114,7 @@ fun LudoBoardScreen(
     var menu by rememberSaveable { mutableStateOf(false) }
     var savedToast by remember { mutableStateOf<Int?>(null) }
     val selectable = if (s.awaitingHuman && s.turnPhase == TurnPhase.SELECTING_TOKEN) s.legalMoves.toSet() else emptySet()
-    val activeSeat = if (s.turnPhase == TurnPhase.GAME_OVER) -1 else game.seatOf(game.current)
+    val activeSeat = if (s.turnPhase == TurnPhase.GAME_OVER) -1 else game.seatOf(s.turnPlayer)
 
     // Seats split into the pods above and below the board, ordered left to right.
     val (topSeats, bottomSeats) = remember(game.topology) {
@@ -183,7 +184,7 @@ fun LudoBoardScreen(
 
 @Composable
 private fun hint(s: LudoUiState): String {
-    val p = s.game.config.players[s.game.current]
+    val p = s.game.config.players[s.turnPlayer]
     return when {
         s.turnPhase == TurnPhase.GAME_OVER -> stringResource(R.string.game_over)
         s.paused -> stringResource(R.string.paused)
@@ -213,7 +214,7 @@ private fun PodRowLtr(seats: List<Int>, s: LudoUiState, view: BoardView, top: Bo
     ) {
         seats.forEach { seat ->
             val player = game.config.seats.indexOf(seat)
-            val active = player >= 0 && player == game.current && s.turnPhase != TurnPhase.GAME_OVER
+            val active = player >= 0 && player == s.turnPlayer && s.turnPhase != TurnPhase.GAME_OVER
             // Turn-driven sizing: the active pod grows to one uniform size, the others rest compact.
             val grow by animateFloatAsState(if (active) 1f else 0f, tween(200, easing = FastOutSlowInEasing), label = "podGrow")
             val mirrored = seats.size > 1 && view.yard(seat).x > 0.5f
@@ -237,9 +238,9 @@ private fun CornerPod(seat: Int, s: LudoUiState, mirrored: Boolean, hex: Boolean
     val cb = LocalColorblind.current
     val player = game.config.seats.indexOf(seat)
     val used = player >= 0
-    val active = used && player == game.current && s.turnPhase != TurnPhase.GAME_OVER
+    val active = used && player == s.turnPlayer && s.turnPhase != TurnPhase.GAME_OVER
     val idle = remember(game.config) { idleSeatColors(game) }
-    val color = if (used) theme.tokenColor(game.config.players[player].colorIndex, cb) else theme.tokenColor(idle[seat] ?: seat, cb)
+    val color = if (used) theme.tokenColor(game.config.players[player].colorIndex, cb) else theme.tokenColor(idle[seat] ?: BoardThemes.seatColorIndex(seat), cb)
     val inf = rememberInfiniteTransition(label = "pod")
     val glow by inf.animateFloat(0.35f, 1f, infiniteRepeatable(tween(650), RepeatMode.Reverse), label = "glow")
     val bounce by inf.animateFloat(0f, 1f, infiniteRepeatable(tween(420), RepeatMode.Reverse), label = "bounce")

@@ -83,6 +83,15 @@ data class BoardTheme(
 )
 
 object BoardThemes {
+    /**
+     * Default token-palette index for each board seat. Palette order is red, green, yellow, blue,
+     * purple, orange; seats run clockwise from the top-left yard, so this puts red top-left, green
+     * top-right, blue bottom-right and yellow bottom-left on the cross board (same cycle on hex).
+     */
+    private val SEAT_COLORS = intArrayOf(0, 1, 3, 2, 4, 5)
+
+    fun seatColorIndex(seat: Int): Int = SEAT_COLORS[seat.mod(SEAT_COLORS.size)]
+
     /** Okabe–Ito palette: distinguishable under the common forms of colour-vision deficiency. */
     val COLORBLIND_TOKENS = listOf(
         Color(0xFFD55E00), Color(0xFF009E73), Color(0xFFF0E442), Color(0xFF0072B2), Color(0xFFCC79A7), Color(0xFF56B4E9),

@@ -72,17 +72,17 @@ class ShowcaseTest {
         File(out, "$name.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
-    private fun players(n: Int) = List(n) { PlayerSpec("P${it + 1}", PlayerKind.HUMAN, colorIndex = it) }
+    private fun players(n: Int) = List(n) { PlayerSpec("P${it + 1}", PlayerKind.HUMAN, colorIndex = BoardThemes.seatColorIndex(it)) }
 
-    /** Classic board: Red 2 home + a pawn on a star shared with Blue; Green Fortress; Yellow 3 home. */
+    /** Classic board: Red 2 home + a pawn on a star shared with Yellow; Green Fortress; Blue (bottom-right) 3 home. */
     private fun classicShowcase(): GameState {
         val cfg = MatchConfig.create(BoardTopology.CLASSIC_4, RuleSet.classic(), players(4))
         val h = BoardTopology.CLASSIC_4.homeProgress
         val tokens = intArrayOf(
             h, h, 8, BASE,      // Red: two finished, one on the star at cell 8
             h, 20, 20, 53,      // Green: one finished, a Fortress on cell 33, one in the home stretch
-            h, h, h, 8,         // Yellow: three finished, one on its star (cell 34)
-            BASE, BASE, 0, 21,  // Blue: two in the yard, one on its start square, one sharing Red's star
+            h, h, h, 8,         // Blue: three finished, one on its star (cell 34)
+            BASE, BASE, 0, 21,  // Yellow: two in the yard, one on its start square, one sharing Red's star
         )
         return GameState(cfg, tokens, current = 0, phase = Phase.AWAITING_MOVE, dice = 3)
     }

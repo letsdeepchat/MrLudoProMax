@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="board_title">لودو ألترا برو-ماكس</string>
+    <string name="board_title">لودو ألترا</string>
     <string name="back">رجوع</string>
     <string name="undo">تراجع عن آخر حركة</string>
     <string name="menu">القائمة</string>

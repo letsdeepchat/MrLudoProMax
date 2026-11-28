@@ -16,11 +16,11 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.ludosovereign"
+        applicationId = "com.ludoultra"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
-        versionName = "1.4.0"
+        versionCode = 7
+        versionName = "1.6.0"
         // Ship only the languages we translate (also trims library strings and the generated locale list).
         resourceConfigurations += listOf("en", "hi", "ta", "te", "kn", "mr", "gu", "bn", "ml", "es", "ar", "fr")
     }

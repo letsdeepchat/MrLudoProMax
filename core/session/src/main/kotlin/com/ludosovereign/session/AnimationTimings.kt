@@ -63,6 +63,8 @@ data class AnimationTimings(
     private fun s(v: Long, k: Float) = (v * k).toLong().coerceAtLeast(1)
 
     companion object {
+        /** Mandatory 1.2 s hold on the settled dice face after every roll (every player, every phase) before any move. */
+        const val DICE_REVEAL_MS = 1200L
         const val BASE_HOP_MS = 235L
         /** One display frame of slack per tween. */
         const val FRAME_SLACK_MS = 17L

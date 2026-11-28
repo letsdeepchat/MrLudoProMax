@@ -86,6 +86,7 @@ class MainActivity : ComponentActivity() {
                 moveAnimationMs = (350 / settings.animationSpeed).toLong(),
                 fastAnimations = fast,
                 animationSpeed = settings.animationSpeed,
+                guaranteedSixes = true,
             )
         }
         var undoForMatch by remember { mutableStateOf(false) }

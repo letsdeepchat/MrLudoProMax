@@ -573,7 +573,8 @@ internal fun idleSeatColors(g: GameState): Map<Int, Int> {
     val out = HashMap<Int, Int>()
     for (seat in 0 until g.topology.seats) {
         if (seat in g.config.seats) continue
-        val pick = if (seat !in used) seat else (0 until 6).firstOrNull { it !in used } ?: seat
+        val own = BoardThemes.seatColorIndex(seat)
+        val pick = if (own !in used) own else (0 until 6).map(BoardThemes::seatColorIndex).firstOrNull { it !in used } ?: own
         used += pick
         out[seat] = pick
     }

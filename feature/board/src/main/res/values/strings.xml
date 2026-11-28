@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="board_title">Ludo Ultra Pro-Max</string>
+    <string name="board_title">Ludo Ultra</string>
     <string name="back">Back</string>
     <string name="undo">Undo last move</string>
     <string name="menu">Menu</string>

@@ -1,4 +1,4 @@
-# MrLudoProMax — Ludo Ultra Pro-Max
+# MrLudoProMax — Ludo Ultra
 
 A 100% offline Android board game: Ludo (4-player cross and 6-player hex boards) plus Snakes & Ladders.
 No ads, no purchases, no `INTERNET` permission, every mode and theme unlocked.

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="board_title">लूडो अल्ट्रा प्रो-मैक्स</string>
+    <string name="board_title">लूडो अल्ट्रा</string>
     <string name="back">वापस</string>
     <string name="undo">पिछली चाल वापस लें</string>
     <string name="menu">मेनू</string>
